@@ -1,0 +1,398 @@
+import { useEffect, useRef, useState } from "react";
+import OrderList from "../components/OrderList.jsx";
+import { api } from "../lib/api.js";
+import { money } from "../lib/format.js";
+import { productImage, productImages } from "../lib/products.js";
+import { blockNumberInput, DECIMAL_PATTERN, DIGITS_PATTERN, isDecimal, isDigits, isTextValue, TEXT_PATTERN } from "../lib/validation.js";
+
+function rowKey() {
+  return `${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+}
+
+export default function AdminPage({ user, products, categories, openAuth, showToast, loadProducts }) {
+  const [imageSlots, setImageSlots] = useState([Date.now()]);
+  const [variantRows, setVariantRows] = useState([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+  const [settings, setSettings] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    if (user?.role !== "admin") return;
+    api("settings.php").then(setSettings).catch((error) => showToast(error.message));
+    api("orders.php?all=1")
+      .then((data) => setOrders(data.orders || []))
+      .catch(() => {});
+    api("contact.php")
+      .then((data) => setMessages(data.messages || []))
+      .catch(() => {});
+  }, [user]);
+
+  if (!user) {
+    return (
+      <main className="page-wrap">
+        <div className="auth-required">
+          <h1>Admin Panel</h1>
+          <p>Admin login is required.</p>
+          <button className="primary-button" onClick={() => openAuth("login")}>
+            Login
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (user.role !== "admin") {
+    return (
+      <main className="page-wrap">
+        <div className="empty-state">Admin access required.</div>
+      </main>
+    );
+  }
+
+  async function submitProduct(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const name = formData.get("name");
+
+    if (!isTextValue(name)) {
+      showToast("Product name can contain letters, numbers, spaces, and basic punctuation only.");
+      return;
+    }
+
+    for (const row of variantRows) {
+      const size = formData.get(`variants[${row.key}][size]`);
+      const price = formData.get(`variants[${row.key}][price]`);
+      const stock = formData.get(`variants[${row.key}][stock]`);
+      if (!isTextValue(size)) {
+        showToast("Each product size must use valid text.");
+        return;
+      }
+      if (!isDecimal(price)) {
+        showToast("Each size price can contain numbers only, with up to two decimals.");
+        return;
+      }
+      if (!isDigits(stock)) {
+        showToast("Each size quantity can contain numbers only.");
+        return;
+      }
+    }
+
+    setBusy(true);
+    try {
+      if (editingProduct) {
+        formData.set("action", "update");
+        formData.set("id", editingProduct.id);
+      }
+
+      const data = await api("products.php", {
+        method: "POST",
+        body: formData,
+      });
+      showToast(data.message);
+      form.reset();
+      setImageSlots([Date.now()]);
+      setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+      setEditingProduct(null);
+      await loadProducts();
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveSettings(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    try {
+      const data = await api("settings.php", {
+        method: "POST",
+        body: {
+          razorpay_key_id: formData.get("razorpay_key_id"),
+          razorpay_key_secret: formData.get("razorpay_key_secret"),
+        },
+      });
+      setSettings(data);
+      form.reset();
+      showToast("Payment settings saved.");
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  async function deleteProduct(product) {
+    if (!window.confirm(`Delete ${product.name}?`)) return;
+
+    try {
+      const formData = new FormData();
+      formData.set("action", "delete");
+      formData.set("id", product.id);
+      const data = await api("products.php", {
+        method: "POST",
+        body: formData,
+      });
+      showToast(data.message);
+      if (editingProduct?.id === product.id) {
+        setEditingProduct(null);
+        setImageSlots([Date.now()]);
+        setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+      }
+      await loadProducts();
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  async function removeProductImage(image) {
+    if (!window.confirm("Remove this product image?")) return;
+
+    try {
+      const formData = new FormData();
+      formData.set("action", "delete_image");
+      formData.set("image_id", image.id);
+      const data = await api("products.php", {
+        method: "POST",
+        body: formData,
+      });
+      showToast(data.message);
+      const refreshedProducts = await loadProducts();
+      if (editingProduct && refreshedProducts) {
+        setEditingProduct(refreshedProducts.find((product) => product.id === editingProduct.id) || null);
+      } else if (editingProduct) {
+        setEditingProduct({
+          ...editingProduct,
+          images: editingProduct.images.filter((item) => item.id !== image.id),
+        });
+      }
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  function editProduct(product) {
+    setEditingProduct(product);
+    setImageSlots([Date.now()]);
+    setVariantRows(
+      (product.variants?.length ? product.variants : [{ size_label: "1L", price: product.price, stock: product.stock }]).map((variant) => ({
+        key: variant.id || rowKey(),
+        size: variant.size_label || "1L",
+        price: variant.price ?? "",
+        stock: variant.stock ?? "",
+      }))
+    );
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditingProduct(null);
+    formRef.current?.reset();
+    setImageSlots([Date.now()]);
+    setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+  }
+
+  return (
+    <main className="page-wrap admin-page">
+      <div className="page-title">
+        <p className="eyebrow">Store management</p>
+        <h1>Admin Panel</h1>
+      </div>
+
+      <section className="admin-grid">
+        <form className="panel-form" key={editingProduct?.id || "new"} ref={formRef} onSubmit={submitProduct}>
+          <div className="form-title-row">
+            <h2>{editingProduct ? "Edit Product" : "Add Product"}</h2>
+            {editingProduct && (
+              <button type="button" className="ghost-button" onClick={cancelEdit}>
+                Cancel
+              </button>
+            )}
+          </div>
+          <label>
+            Product name
+            <input name="name" pattern={TEXT_PATTERN} required defaultValue={editingProduct?.name || ""} placeholder="Groundnut Oil 1L" />
+          </label>
+          <label>
+            Category
+            <select name="category" required defaultValue={editingProduct?.category || categories[0]}>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="variant-inputs">
+            <span>Sizes and prices</span>
+            {variantRows.map((row) => (
+              <div className="variant-row" key={row.key}>
+                <label>
+                  Size
+                  <input name={`variants[${row.key}][size]`} pattern={TEXT_PATTERN} required defaultValue={row.size} placeholder="200ml" />
+                </label>
+                <label>
+                  Price
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern={DECIMAL_PATTERN}
+                    name={`variants[${row.key}][price]`}
+                    onKeyDown={(event) => blockNumberInput(event, { decimal: true })}
+                    required
+                    defaultValue={row.price}
+                  />
+                </label>
+                <label>
+                  Quantity
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern={DIGITS_PATTERN}
+                    name={`variants[${row.key}][stock]`}
+                    onKeyDown={blockNumberInput}
+                    required
+                    defaultValue={row.stock}
+                  />
+                </label>
+                {variantRows.length > 1 && (
+                  <button
+                    type="button"
+                    className="danger-button"
+                    onClick={() => setVariantRows((rows) => rows.filter((item) => item.key !== row.key))}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => setVariantRows((rows) => [...rows, { key: rowKey(), size: "", price: "", stock: "" }])}
+            >
+              Add size
+            </button>
+          </div>
+          <label>
+            Description
+            <textarea name="description" rows="4" defaultValue={editingProduct?.description || ""} />
+          </label>
+          <div className="image-inputs">
+            <span>{editingProduct ? "Product photos" : "Product photos"}</span>
+            {editingProduct?.images?.length > 0 && (
+              <div className="existing-images">
+                {productImages(editingProduct).map((image) => (
+                  <div className="existing-image" key={image.id}>
+                    <img src={image.url} alt="" />
+                    <button type="button" className="image-remove-button" onClick={() => removeProductImage(image)}>
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {imageSlots.map((slot) => (
+              <div className="image-file-row" key={slot}>
+                <input type="file" name="images[]" accept="image/*" />
+                {imageSlots.length > 1 && (
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => setImageSlots((slots) => slots.filter((item) => item !== slot))}
+                  >
+                    Remove file
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" className="ghost-button" onClick={() => setImageSlots((slots) => [...slots, Date.now() + Math.random()])}>
+              Add image
+            </button>
+          </div>
+          <button className="primary-button full" disabled={busy}>
+            {busy ? "Saving..." : editingProduct ? "Update product" : "Save product"}
+          </button>
+        </form>
+
+        <form className="panel-form" onSubmit={saveSettings}>
+          <h2>Razorpay Settings</h2>
+          <label>
+            Key ID
+            <input name="razorpay_key_id" defaultValue={settings?.razorpay_key_id || ""} placeholder="rzp_test_..." />
+          </label>
+          <label>
+            Secret Key
+            <input name="razorpay_key_secret" type="password" placeholder={settings?.razorpay_secret_set ? "Secret already saved" : ""} />
+          </label>
+          <p className="status-copy">Cloudinary: {settings?.cloudinary_configured ? "configured" : "add keys in .env"}</p>
+          <button className="primary-button full">Save payment keys</button>
+        </form>
+      </section>
+
+      <section className="inventory-section">
+        <div className="section-head">
+          <span>Inventory</span>
+          <small>{products.length} products</small>
+        </div>
+        <div className="inventory-table">
+          {products.map((product) => (
+            <div className="inventory-row" key={product.id}>
+              <img src={productImage(product)} alt={product.name} />
+              <span>{product.name}</span>
+              <small>{product.category}</small>
+              <strong>{money(product.price)}</strong>
+              <em>{product.stock} available</em>
+              <small className="variant-summary">
+                {(product.variants || []).map((variant) => `${variant.size_label} ${money(variant.price)}`).join(", ")}
+              </small>
+              <div className="inventory-actions">
+                <button className="edit-button" onClick={() => editProduct(product)}>
+                  Edit
+                </button>
+                <button className="danger-button" onClick={() => deleteProduct(product)}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="inventory-section">
+        <div className="section-head">
+          <span>Contact Messages</span>
+          <small>{messages.length} messages</small>
+        </div>
+        {!messages.length ? (
+          <div className="empty-state">No contact messages yet.</div>
+        ) : (
+          <div className="messages-list">
+            {messages.map((message) => (
+              <article className="message-card" key={message.id}>
+                <div>
+                  <strong>{message.name}</strong>
+                  <small>{new Date(message.created_at).toLocaleString()}</small>
+                </div>
+                <p>{message.message}</p>
+                <a href={`mailto:${message.email}`}>{message.email}</a>
+                {message.phone && <span>{message.phone}</span>}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="inventory-section">
+        <div className="section-head">
+          <span>Recent Orders</span>
+          <small>{orders.length} orders</small>
+        </div>
+        <OrderList orders={orders.slice(0, 6)} />
+      </section>
+    </main>
+  );
+}

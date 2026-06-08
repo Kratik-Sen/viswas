@@ -1,0 +1,248 @@
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/bootstrap.php';
+
+function uploaded_files(string $field): array
+{
+    if (!isset($_FILES[$field])) {
+        return [];
+    }
+
+    $files = $_FILES[$field];
+    if (!is_array($files['name'])) {
+        return [$files];
+    }
+
+    $normalized = [];
+    foreach ($files['name'] as $index => $name) {
+        if ($name === '') {
+            continue;
+        }
+
+        $normalized[] = [
+            'name' => $name,
+            'type' => $files['type'][$index],
+            'tmp_name' => $files['tmp_name'][$index],
+            'error' => $files['error'][$index],
+            'size' => $files['size'][$index],
+        ];
+    }
+
+    return $normalized;
+}
+
+function product_variant_payload(array $post): array
+{
+    $rawVariants = $post['variants'] ?? [];
+    if (!is_array($rawVariants)) {
+        $rawVariants = [];
+    }
+
+    $variants = [];
+    foreach ($rawVariants as $variant) {
+        if (!is_array($variant)) {
+            continue;
+        }
+
+        $size = trim((string) ($variant['size'] ?? ''));
+        $price = trim((string) ($variant['price'] ?? ''));
+        $stock = trim((string) ($variant['stock'] ?? ''));
+
+        if ($size === '' && $price === '' && $stock === '') {
+            continue;
+        }
+        if ($size === '' || !preg_match("/^[A-Za-z0-9 .,'()\/#&+\-]+$/", $size)) {
+            fail('Each size must have a valid size label.', 422);
+        }
+        if (!preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $price)) {
+            fail('Each size price must contain numbers only, with up to two decimals.', 422);
+        }
+        if (!preg_match('/^[0-9]+$/', $stock)) {
+            fail('Each size quantity must contain numbers only.', 422);
+        }
+
+        $variants[] = [
+            'size' => $size,
+            'price' => (float) $price,
+            'stock' => (int) $stock,
+        ];
+    }
+
+    if ($variants === []) {
+        fail('Add at least one product size.', 422);
+    }
+
+    return $variants;
+}
+
+if (method_is('GET')) {
+    if (isset($_GET['categories'])) {
+        respond(['categories' => PRODUCT_CATEGORIES]);
+    }
+
+    if (isset($_GET['id'])) {
+        $stmt = pdo()->prepare('SELECT * FROM products WHERE id = ? AND active = 1');
+        $stmt->execute([(int) $_GET['id']]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            fail('Product not found.', 404);
+        }
+        respond(['product' => normalize_product($row)]);
+    }
+
+    $params = [];
+    $sql = 'SELECT * FROM products WHERE active = 1';
+    if (!empty($_GET['category'])) {
+        $sql .= ' AND category = ?';
+        $params[] = $_GET['category'];
+    }
+    $sql .= ' ORDER BY created_at DESC, id DESC';
+
+    $stmt = pdo()->prepare($sql);
+    $stmt->execute($params);
+    $products = array_map('normalize_product', $stmt->fetchAll());
+    respond(['products' => $products, 'categories' => PRODUCT_CATEGORIES]);
+}
+
+if (!method_is('POST')) {
+    fail('Method not allowed.', 405);
+}
+
+require_admin();
+
+$action = $_POST['action'] ?? $_GET['action'] ?? 'create';
+
+if ($action === 'delete') {
+    $id = (int) ($_POST['id'] ?? 0);
+    if ($id <= 0) {
+        fail('Product id is required.', 422);
+    }
+
+    $stmt = pdo()->prepare('UPDATE products SET active = 0 WHERE id = ?');
+    $stmt->execute([$id]);
+    if ($stmt->rowCount() !== 1) {
+        fail('Product not found.', 404);
+    }
+
+    respond(['message' => 'Product deleted.']);
+}
+
+if ($action === 'delete_image') {
+    $imageId = (int) ($_POST['image_id'] ?? 0);
+    if ($imageId <= 0) {
+        fail('Image id is required.', 422);
+    }
+
+    $stmt = pdo()->prepare(
+        'DELETE product_images
+         FROM product_images
+         JOIN products ON products.id = product_images.product_id
+         WHERE product_images.id = ?'
+    );
+    $stmt->execute([$imageId]);
+    if ($stmt->rowCount() !== 1) {
+        fail('Product image not found.', 404);
+    }
+
+    respond(['message' => 'Product image removed.']);
+}
+
+validate_required($_POST, ['name', 'category']);
+
+if (!preg_match("/^[A-Za-z0-9 .,'()\/#&+\-]+$/", trim((string) $_POST['name']))) {
+    fail('Product name can contain letters, numbers, spaces, and basic punctuation only.', 422);
+}
+
+$category = trim((string) $_POST['category']);
+if (!in_array($category, PRODUCT_CATEGORIES, true)) {
+    fail('Invalid product category.', 422);
+}
+
+$variants = product_variant_payload($_POST);
+$price = (float) $variants[0]['price'];
+$stock = array_sum(array_map(static fn(array $variant): int => (int) $variant['stock'], $variants));
+if ($price <= 0) {
+    fail('Price must be greater than zero.', 422);
+}
+if ($stock < 0) {
+    fail('Quantity cannot be negative.', 422);
+}
+
+$db = pdo();
+$db->beginTransaction();
+
+try {
+    if ($action === 'update') {
+        $productId = (int) ($_POST['id'] ?? 0);
+        if ($productId <= 0) {
+            fail('Product id is required.', 422);
+        }
+
+        $update = $db->prepare(
+            'UPDATE products
+             SET name = ?, category = ?, description = ?, price = ?, stock = ?, active = 1
+             WHERE id = ?'
+        );
+        $update->execute([
+            trim((string) $_POST['name']),
+            $category,
+            trim((string) ($_POST['description'] ?? '')),
+            $price,
+            $stock,
+            $productId,
+        ]);
+
+        if ($update->rowCount() === 0) {
+            $exists = $db->prepare('SELECT id FROM products WHERE id = ?');
+            $exists->execute([$productId]);
+            if (!$exists->fetch()) {
+                fail('Product not found.', 404);
+            }
+        }
+    } else {
+        $insert = $db->prepare(
+            'INSERT INTO products (name, category, description, price, stock, active) VALUES (?, ?, ?, ?, ?, 1)'
+        );
+        $insert->execute([
+            trim((string) $_POST['name']),
+            $category,
+            trim((string) ($_POST['description'] ?? '')),
+            $price,
+            $stock,
+        ]);
+
+        $productId = (int) $db->lastInsertId();
+    }
+
+    $imageInsert = $db->prepare('INSERT INTO product_images (product_id, url, public_id) VALUES (?, ?, ?)');
+    $files = uploaded_files('images');
+    $deleteVariants = $db->prepare('DELETE FROM product_variants WHERE product_id = ?');
+    $deleteVariants->execute([$productId]);
+
+    $variantInsert = $db->prepare(
+        'INSERT INTO product_variants (product_id, size_label, price, stock, active) VALUES (?, ?, ?, ?, 1)'
+    );
+    foreach ($variants as $variant) {
+        $variantInsert->execute([$productId, $variant['size'], $variant['price'], $variant['stock']]);
+    }
+
+    foreach ($files as $file) {
+        $uploaded = upload_product_image($file);
+        $imageInsert->execute([$productId, $uploaded['url'], $uploaded['public_id']]);
+    }
+
+    $db->commit();
+
+    $stmt = $db->prepare('SELECT * FROM products WHERE id = ?');
+    $stmt->execute([$productId]);
+    respond([
+        'message' => $action === 'update' ? 'Product updated.' : 'Product added.',
+        'product' => normalize_product($stmt->fetch()),
+    ], $action === 'update' ? 200 : 201);
+} catch (Throwable $exception) {
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
+    fail($exception->getMessage(), 500);
+}
