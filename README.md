@@ -33,9 +33,9 @@ The frontend and PHP API can deploy together on Vercel using `vercel.json`. Add 
 
 ```env
 APP_ENV=production
-APP_URL=https://viswas-xi.vercel.app
-FRONTEND_URL=https://viswas-xi.vercel.app
-VITE_API_BASE_URL=https://viswas-xi.vercel.app/api
+APP_URL=https://viswas-opal.vercel.app
+FRONTEND_URL=https://viswas-opal.vercel.app
+VITE_API_BASE_URL=https://viswas-opal.vercel.app/api
 SESSION_DRIVER=database
 SESSION_SAMESITE=None
 DB_HOST=acela.proxy.rlwy.net
