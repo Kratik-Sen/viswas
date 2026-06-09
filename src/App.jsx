@@ -9,6 +9,7 @@ import CategoryPage from "./pages/CategoryPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx";
+import ProductPage from "./pages/ProductPage.jsx";
 import PrivacyPage from "./pages/PrivacyPage.jsx";
 import { api } from "./lib/api.js";
 import { CATEGORIES, CART_KEY } from "./lib/constants.js";
@@ -86,7 +87,10 @@ export default function App() {
       price: product.price,
       stock: product.stock,
     };
-    const qty = Math.max(1, Math.min(Number(quantity || 1), Number(selectedVariant.stock || 0)));
+    const stock = Math.max(0, Number(selectedVariant.stock || 0));
+    const parsedQty = Math.floor(Number(quantity || 1));
+    const requestedQty = Number.isFinite(parsedQty) ? Math.max(1, parsedQty) : 1;
+    const qty = Math.min(requestedQty, stock);
     if (qty <= 0) {
       showToast("This product is out of stock.");
       return;
@@ -99,11 +103,11 @@ export default function App() {
       if (existing) {
         return items.map((item) => {
           if (item.cart_key !== cartKey) return item;
-          const nextQty = Math.min(item.quantity + qty, selectedVariant.stock);
+          const nextQty = Math.min(item.quantity + qty, stock);
           return {
             ...item,
             quantity: nextQty,
-            stock: selectedVariant.stock,
+            stock,
             price: selectedVariant.price,
             size_label: selectedVariant.size_label,
           };
@@ -119,7 +123,7 @@ export default function App() {
           name: product.name,
           category: product.category,
           price: selectedVariant.price,
-          stock: selectedVariant.stock,
+          stock,
           quantity: qty,
           image: productImage(product),
         },
@@ -138,14 +142,16 @@ export default function App() {
           const liveVariant =
             liveProduct?.variants?.find((variant) => String(variant.id) === String(item.variant_id)) ||
             liveProduct?.variants?.[0];
-          const stock = Number(liveVariant?.stock ?? liveProduct?.stock ?? item.stock);
+          const stock = Math.max(0, Number(liveVariant?.stock ?? liveProduct?.stock ?? item.stock) || 0);
+          const parsedQuantity = Math.floor(Number(quantity || 1));
+          const requestedQuantity = Number.isFinite(parsedQuantity) ? Math.max(1, parsedQuantity) : 1;
           return {
             ...item,
             cart_key: key,
             stock,
             price: liveVariant?.price ?? liveProduct?.price ?? item.price,
             size_label: liveVariant?.size_label ?? item.size_label,
-            quantity: Math.max(1, Math.min(Number(quantity), stock || 1)),
+            quantity: Math.min(requestedQuantity, stock),
           };
         })
         .filter((item) => item.quantity > 0)
@@ -228,6 +234,7 @@ function Router({ pageProps }) {
   if (page === "category") return <CategoryPage {...pageProps} />;
   if (page === "about") return <AboutPage />;
   if (page === "privacy") return <PrivacyPage />;
+  if (page === "product") return <ProductPage {...pageProps} />;
   if (page === "contact") return <ContactPage showToast={pageProps.showToast} />;
   if (page === "cart") return <CartPage {...pageProps} />;
   if (page === "orders") return <OrdersPage user={pageProps.user} openAuth={pageProps.openAuth} />;

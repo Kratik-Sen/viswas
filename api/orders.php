@@ -15,11 +15,18 @@ if ($adminView) {
         'SELECT orders.*, users.name AS customer_name, users.email AS customer_email
          FROM orders
          JOIN users ON users.id = orders.user_id
+         WHERE orders.payment_status IN (\'paid\', \'cod_pending\')
          ORDER BY orders.created_at DESC'
     );
     $orders = $stmt->fetchAll();
 } else {
-    $stmt = pdo()->prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC');
+    $stmt = pdo()->prepare(
+        'SELECT *
+         FROM orders
+         WHERE user_id = ?
+           AND payment_status IN (\'paid\', \'cod_pending\')
+         ORDER BY created_at DESC'
+    );
     $stmt->execute([(int) $user['id']]);
     $orders = $stmt->fetchAll();
 }

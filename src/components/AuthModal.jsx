@@ -48,9 +48,14 @@ export default function AuthModal({ mode, setMode, notice, onClose, onAuthed }) 
     <div className="modal-backdrop">
       <div className="auth-modal">
         <button className="modal-close" onClick={onClose} aria-label="Close">
-          x
+          ✕
         </button>
-        <h2>{isRegister ? "Create Account" : "Login"}</h2>
+        <h2>{isRegister ? "Create Account" : "Welcome Back"}</h2>
+        <p className="auth-desc">
+          {isRegister
+            ? "Sign up with your delivery details to place orders."
+            : "Login to your Viswas Oils account."}
+        </p>
         {notice && <p className="notice">{notice}</p>}
         {error && <p className="form-error">{error}</p>}
         <form onSubmit={submit}>

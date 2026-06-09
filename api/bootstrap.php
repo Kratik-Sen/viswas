@@ -127,6 +127,14 @@ function write_env_values(array $updates): void
     }
 }
 
+function razorpay_credentials(): array
+{
+    return [
+        'key_id' => trim((string) env_value('RAZORPAY_KEY_ID', '')),
+        'key_secret' => trim((string) env_value('RAZORPAY_KEY_SECRET', '')),
+    ];
+}
+
 function pdo(bool $withDatabase = true): PDO
 {
     static $connections = [];
@@ -352,10 +360,11 @@ function upload_product_image(array $file): array
 
 function create_razorpay_order(float $amountRupees, int $orderId): array
 {
-    $keyId = env_value('RAZORPAY_KEY_ID', '');
-    $secret = env_value('RAZORPAY_KEY_SECRET', '');
+    $credentials = razorpay_credentials();
+    $keyId = $credentials['key_id'];
+    $secret = $credentials['key_secret'];
     if ($keyId === '' || $secret === '') {
-        fail('Razorpay keys are missing. Add them from the admin panel or .env file.', 422);
+        throw new RuntimeException('Razorpay keys are missing. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to the .env file.');
     }
 
     $payload = json_encode([
@@ -380,12 +389,21 @@ function create_razorpay_order(float $amountRupees, int $orderId): array
     curl_close($curl);
 
     if ($body === false || $status < 200 || $status >= 300) {
-        fail('Razorpay order creation failed: ' . ($error ?: $body), 502);
+        $decodedError = is_string($body) ? json_decode($body, true) : null;
+        $description = is_array($decodedError)
+            ? (string) ($decodedError['error']['description'] ?? '')
+            : '';
+
+        if ($status === 401 || str_contains(strtolower($description), 'authentication failed')) {
+            throw new RuntimeException('Razorpay authentication failed. Check that RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env are a matching test or live key pair.');
+        }
+
+        throw new RuntimeException('Razorpay order creation failed: ' . ($description ?: $error ?: 'Unknown Razorpay error.'));
     }
 
     $decoded = json_decode($body, true);
     if (!isset($decoded['id'])) {
-        fail('Razorpay returned an invalid order response.', 502);
+        throw new RuntimeException('Razorpay returned an invalid order response.');
     }
 
     return $decoded;

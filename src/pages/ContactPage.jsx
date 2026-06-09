@@ -21,12 +21,9 @@ export default function ContactPage({ showToast }) {
 
     setBusy(true);
     try {
-      await api("contact.php", {
-        method: "POST",
-        body: payload,
-      });
+      await api("contact.php", { method: "POST", body: payload });
       form.reset();
-      showToast("Message sent.");
+      showToast("Message sent successfully!");
     } catch (error) {
       showToast(error.message);
     } finally {
@@ -36,37 +33,96 @@ export default function ContactPage({ showToast }) {
 
   return (
     <main className="page-wrap two-column">
+      {/* Left: Info */}
       <section className="copy-panel">
-        <p className="eyebrow">Contact</p>
-        <h1>Talk to Viswas Oils</h1>
+        <p className="eyebrow">Get in Touch</p>
+        <h1>Talk to<br />Viswas Oils</h1>
         <p>
-          For bulk orders, delivery updates, product questions, or store partnerships, send a message and the team will get back to you.
+          For bulk orders, delivery updates, product questions, or store partnerships —
+          send us a message and our team will get back to you within 24 hours.
         </p>
-        <div className="contact-lines">
-          <span>Phone: +91 99999 99999</span>
-          <span>Email: care@viswasoils.test</span>
-          <span>Address: Viswas Oils, Main Market Road, India</span>
+
+        <div className="contact-lines" style={{ marginTop: "32px" }}>
+          <div className="contact-line-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9a16 16 0 0 0 6.91 6.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            +91 99999 99999
+          </div>
+          <div className="contact-line-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            care@viswasoils.in
+          </div>
+          <div className="contact-line-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Main Market Road, India — 500001
+          </div>
+        </div>
+
+        {/* Hours */}
+        <div style={{
+          marginTop: "28px",
+          padding: "18px 20px",
+          borderRadius: "12px",
+          background: "var(--green-bg)",
+          border: "1px solid var(--green-border)"
+        }}>
+          <strong style={{ color: "var(--green)", fontSize: "0.85rem", display: "block", marginBottom: "8px" }}>
+            🕐 Business Hours
+          </strong>
+          <p style={{ color: "var(--muted)", fontSize: "0.85rem", margin: 0, lineHeight: 1.7 }}>
+            Monday – Saturday: 9:00 AM – 6:00 PM<br />
+            Sunday: Closed
+          </p>
         </div>
       </section>
+
+      {/* Right: Form */}
       <form className="panel-form" onSubmit={submit}>
+        <h2>Send us a Message</h2>
+        <p style={{ color: "var(--muted)", fontSize: "0.85rem", margin: "-6px 0 6px" }}>
+          We'll respond within 24 hours.
+        </p>
+
+        <div className="form-row">
+          <label>
+            Full Name *
+            <input
+              name="name"
+              pattern={TEXT_PATTERN}
+              title="Use letters, numbers, spaces, and basic punctuation only."
+              required
+              placeholder="Your name"
+            />
+          </label>
+          <label>
+            Phone
+            <input
+              name="phone"
+              type="tel"
+              inputMode="numeric"
+              pattern={DIGITS_PATTERN}
+              onKeyDown={blockNumberInput}
+              placeholder="10-digit number"
+            />
+          </label>
+        </div>
         <label>
-          Name
-          <input name="name" pattern={TEXT_PATTERN} title="Use letters, numbers, spaces, and basic punctuation only." required />
+          Email *
+          <input type="email" name="email" required placeholder="you@example.com" />
         </label>
         <label>
-          Email
-          <input type="email" name="email" required />
-        </label>
-        <label>
-          Phone
-          <input name="phone" type="tel" inputMode="numeric" pattern={DIGITS_PATTERN} onKeyDown={blockNumberInput} />
-        </label>
-        <label>
-          Message
-          <textarea name="message" rows="5" required />
+          Message *
+          <textarea name="message" rows="5" required placeholder="Tell us how we can help..." />
         </label>
         <button className="primary-button full" disabled={busy}>
-          {busy ? "Sending..." : "Send message"}
+          {busy ? "Sending..." : "Send Message →"}
         </button>
       </form>
     </main>

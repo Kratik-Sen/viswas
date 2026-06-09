@@ -105,26 +105,6 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
     }
   }
 
-  async function saveSettings(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    try {
-      const data = await api("settings.php", {
-        method: "POST",
-        body: {
-          razorpay_key_id: formData.get("razorpay_key_id"),
-          razorpay_key_secret: formData.get("razorpay_key_secret"),
-        },
-      });
-      setSettings(data);
-      form.reset();
-      showToast("Payment settings saved.");
-    } catch (error) {
-      showToast(error.message);
-    }
-  }
-
   async function deleteProduct(product) {
     if (!window.confirm(`Delete ${product.name}?`)) return;
 
@@ -195,17 +175,37 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
     setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
   }
 
+  const totalStock = products.reduce((sum, p) => sum + Number(p.stock || 0), 0);
+  const totalValue = products.reduce((sum, p) => sum + Number(p.price || 0) * Number(p.stock || 0), 0);
+
   return (
     <main className="page-wrap admin-page">
       <div className="page-title">
-        <p className="eyebrow">Store management</p>
-        <h1>Admin Panel</h1>
+        <p className="eyebrow">Store Management</p>
+        <h1>Admin Dashboard</h1>
       </div>
 
+      {/* ---- Dashboard Stats ---- */}
+      <div className="admin-stats">
+        <div>
+          <strong>{products.length}</strong>
+          <span>Total Products</span>
+        </div>
+        <div>
+          <strong>{totalStock.toLocaleString("en-IN")}</strong>
+          <span>Units in Stock</span>
+        </div>
+        <div>
+          <strong>{orders.length}</strong>
+          <span>Total Orders</span>
+        </div>
+      </div>
+
+      {/* ---- Product Form + Settings ---- */}
       <section className="admin-grid">
         <form className="panel-form" key={editingProduct?.id || "new"} ref={formRef} onSubmit={submitProduct}>
           <div className="form-title-row">
-            <h2>{editingProduct ? "Edit Product" : "Add Product"}</h2>
+            <h2>{editingProduct ? "✏️ Edit Product" : "➕ Add New Product"}</h2>
             {editingProduct && (
               <button type="button" className="ghost-button" onClick={cancelEdit}>
                 Cancel
@@ -214,7 +214,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
           </div>
           <label>
             Product name
-            <input name="name" pattern={TEXT_PATTERN} required defaultValue={editingProduct?.name || ""} placeholder="Groundnut Oil 1L" />
+            <input name="name" pattern={TEXT_PATTERN} required defaultValue={editingProduct?.name || ""} placeholder="e.g. Groundnut Oil 1L" />
           </label>
           <label>
             Category
@@ -227,7 +227,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
             </select>
           </label>
           <div className="variant-inputs">
-            <span>Sizes and prices</span>
+            <span>Sizes and Prices</span>
             {variantRows.map((row) => (
               <div className="variant-row" key={row.key}>
                 <label>
@@ -235,7 +235,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                   <input name={`variants[${row.key}][size]`} pattern={TEXT_PATTERN} required defaultValue={row.size} placeholder="200ml" />
                 </label>
                 <label>
-                  Price
+                  Price (₹)
                   <input
                     type="text"
                     inputMode="decimal"
@@ -244,10 +244,11 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                     onKeyDown={(event) => blockNumberInput(event, { decimal: true })}
                     required
                     defaultValue={row.price}
+                    placeholder="0.00"
                   />
                 </label>
                 <label>
-                  Quantity
+                  Stock
                   <input
                     type="text"
                     inputMode="numeric"
@@ -256,6 +257,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                     onKeyDown={blockNumberInput}
                     required
                     defaultValue={row.stock}
+                    placeholder="0"
                   />
                 </label>
                 {variantRows.length > 1 && (
@@ -274,15 +276,15 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
               className="ghost-button"
               onClick={() => setVariantRows((rows) => [...rows, { key: rowKey(), size: "", price: "", stock: "" }])}
             >
-              Add size
+              + Add size variant
             </button>
           </div>
           <label>
             Description
-            <textarea name="description" rows="4" defaultValue={editingProduct?.description || ""} />
+            <textarea name="description" rows="4" defaultValue={editingProduct?.description || ""} placeholder="Describe the product's benefits, source, and usage..." />
           </label>
           <div className="image-inputs">
-            <span>{editingProduct ? "Product photos" : "Product photos"}</span>
+            <span>Product Photos</span>
             {editingProduct?.images?.length > 0 && (
               <div className="existing-images">
                 {productImages(editingProduct).map((image) => (
@@ -304,67 +306,108 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                     className="ghost-button"
                     onClick={() => setImageSlots((slots) => slots.filter((item) => item !== slot))}
                   >
-                    Remove file
+                    Remove
                   </button>
                 )}
               </div>
             ))}
             <button type="button" className="ghost-button" onClick={() => setImageSlots((slots) => [...slots, Date.now() + Math.random()])}>
-              Add image
+              + Add another image
             </button>
           </div>
           <button className="primary-button full" disabled={busy}>
-            {busy ? "Saving..." : editingProduct ? "Update product" : "Save product"}
+            {busy ? "Saving..." : editingProduct ? "Update Product" : "Save Product"}
           </button>
         </form>
 
-        <form className="panel-form" onSubmit={saveSettings}>
-          <h2>Razorpay Settings</h2>
-          <label>
-            Key ID
-            <input name="razorpay_key_id" defaultValue={settings?.razorpay_key_id || ""} placeholder="rzp_test_..." />
-          </label>
-          <label>
-            Secret Key
-            <input name="razorpay_key_secret" type="password" placeholder={settings?.razorpay_secret_set ? "Secret already saved" : ""} />
-          </label>
-          <p className="status-copy">Cloudinary: {settings?.cloudinary_configured ? "configured" : "add keys in .env"}</p>
-          <button className="primary-button full">Save payment keys</button>
-        </form>
+        <div style={{ display: "grid", gap: "18px", alignContent: "start" }}>
+          <div className="panel-form">
+            <h2>💳 Payment Settings</h2>
+
+            {/* Razorpay status banner when both keys are saved */}
+            {settings?.razorpay_configured && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                padding: "10px 14px", borderRadius: "8px",
+                background: "var(--green-bg)", border: "1px solid var(--green-border)",
+                color: "var(--green)", fontSize: "0.83rem", fontWeight: 600
+              }}>
+                Razorpay keys are loaded from .env
+              </div>
+            )}
+
+            <p className="status-copy">
+              Razorpay keys are read only from the .env file.
+            </p>
+
+            <p className="status-copy">
+              Cloudinary:{" "}
+              <strong style={{ color: settings?.cloudinary_configured ? "var(--green)" : "var(--coral)" }}>
+                {settings?.cloudinary_configured ? "✓ Configured" : "⚠ Add keys in .env"}
+              </strong>
+            </p>
+          </div>
+
+
+          {/* Quick stats card */}
+          <div className="panel-form" style={{ gap: "10px" }}>
+            <h2>📊 Quick Stats</h2>
+            <div style={{ display: "grid", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid var(--green-border)" }}>
+                <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Products</span>
+                <strong style={{ color: "var(--green)" }}>{products.length}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid var(--green-border)" }}>
+                <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Total Stock</span>
+                <strong style={{ color: "var(--green)" }}>{totalStock.toLocaleString("en-IN")} units</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid var(--green-border)" }}>
+                <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Messages</span>
+                <strong style={{ color: "var(--green)" }}>{messages.length}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 12px", background: "var(--green-bg)", borderRadius: "8px", border: "1px solid var(--green-border)" }}>
+                <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>Orders</span>
+                <strong style={{ color: "var(--green)" }}>{orders.length}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
+      {/* ---- Inventory Table ---- */}
       <section className="inventory-section">
-        <div className="section-head">
-          <span>Inventory</span>
+        <div className="inventory-section-header">
+          <span>📦 Inventory</span>
           <small>{products.length} products</small>
         </div>
         <div className="inventory-table">
-          {products.map((product) => (
-            <div className="inventory-row" key={product.id}>
-              <img src={productImage(product)} alt={product.name} />
-              <span>{product.name}</span>
-              <small>{product.category}</small>
-              <strong>{money(product.price)}</strong>
-              <em>{product.stock} available</em>
-              <small className="variant-summary">
-                {(product.variants || []).map((variant) => `${variant.size_label} ${money(variant.price)}`).join(", ")}
-              </small>
-              <div className="inventory-actions">
-                <button className="edit-button" onClick={() => editProduct(product)}>
-                  Edit
-                </button>
-                <button className="danger-button" onClick={() => deleteProduct(product)}>
-                  Delete
-                </button>
+          {products.length === 0 ? (
+            <div className="empty-state">No products yet. Add your first product above.</div>
+          ) : (
+            products.map((product) => (
+              <div className="inventory-row" key={product.id}>
+                <img src={productImage(product)} alt={product.name} />
+                <span>{product.name}</span>
+                <small>{product.category}</small>
+                <strong>{money(product.price)}</strong>
+                <em>{product.stock} units</em>
+                <small className="variant-summary">
+                  {(product.variants || []).map((v) => `${v.size_label} ${money(v.price)}`).join(" · ")}
+                </small>
+                <div className="inventory-actions">
+                  <button className="edit-button" onClick={() => editProduct(product)}>Edit</button>
+                  <button className="danger-button" onClick={() => deleteProduct(product)}>Delete</button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 
+      {/* ---- Contact Messages ---- */}
       <section className="inventory-section">
-        <div className="section-head">
-          <span>Contact Messages</span>
+        <div className="inventory-section-header">
+          <span>💬 Contact Messages</span>
           <small>{messages.length} messages</small>
         </div>
         {!messages.length ? (
@@ -379,17 +422,18 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                 </div>
                 <p>{message.message}</p>
                 <a href={`mailto:${message.email}`}>{message.email}</a>
-                {message.phone && <span>{message.phone}</span>}
+                {message.phone && <span>📞 {message.phone}</span>}
               </article>
             ))}
           </div>
         )}
       </section>
 
+      {/* ---- Recent Orders ---- */}
       <section className="inventory-section">
-        <div className="section-head">
-          <span>Recent Orders</span>
-          <small>{orders.length} orders</small>
+        <div className="inventory-section-header">
+          <span>🛒 Recent Orders</span>
+          <small>{orders.length} total</small>
         </div>
         <OrderList orders={orders.slice(0, 6)} />
       </section>
