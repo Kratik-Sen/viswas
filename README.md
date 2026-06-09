@@ -13,6 +13,40 @@ Vite React frontend with a PHP/MySQL backend for a cooking oil store. It include
 
 For production frontend files, run `npm run build`. The compiled app is written to `dist/`.
 
+## Database Settings
+
+Local XAMPP should use Railway's public MySQL proxy values in `.env`:
+
+```env
+DB_HOST=acela.proxy.rlwy.net
+DB_PORT=15126
+DB_NAME=railway
+DB_USER=root
+DB_PASS=your_railway_password
+```
+
+When deployed on Railway, the backend also accepts Railway's injected `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQL_URL`, and `MYSQL_PUBLIC_URL` variables.
+
+## Vercel Deployment
+
+The frontend and PHP API can deploy together on Vercel using `vercel.json`. Add these environment variables in the Vercel project settings because `.env` is not committed:
+
+```env
+APP_ENV=production
+APP_URL=https://viswas-xi.vercel.app
+FRONTEND_URL=https://viswas-xi.vercel.app
+VITE_API_BASE_URL=https://viswas-xi.vercel.app/api
+SESSION_DRIVER=database
+SESSION_SAMESITE=None
+DB_HOST=acela.proxy.rlwy.net
+DB_PORT=15126
+DB_NAME=railway
+DB_USER=root
+DB_PASS=your_railway_password
+```
+
+If you also add Railway's generated MySQL variables to Vercel, make sure `MYSQL_PUBLIC_URL` is present. Vercel cannot connect to `mysql.railway.internal`; that internal host only works from Railway services.
+
 Default admin login:
 
 - Email: `admin@viswas.test`
@@ -37,10 +71,3 @@ Change these values in `.env` before running this as a real store.
 - If Cloudinary is not configured, images are stored locally in `uploads/` so development can continue.
 - Razorpay checkout requires `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in `.env`.
 - Users can browse every public page, but checkout requires signup or login with address details.
-
-
-
-
-
-RAZORPAY_KEY_ID=rzp_test_SzRHvHgVlHAjza
-RAZORPAY_KEY_SECRET=53E530dPYW2VMQ2RxM9jXTp3

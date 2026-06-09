@@ -27,11 +27,7 @@ export function publicAssetUrl(url) {
       return `/${publicPath}`;
     }
 
-    if (window.location.pathname.includes("/dist")) {
-      return publicPath;
-    }
-
-    return cleanUrl;
+    return publicPath;
   }
 
   if (import.meta.env.DEV) {
