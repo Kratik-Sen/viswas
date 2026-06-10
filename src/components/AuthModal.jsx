@@ -54,7 +54,7 @@ export default function AuthModal({ mode, setMode, notice, onClose, onAuthed }) 
         <p className="auth-desc">
           {isRegister
             ? "Sign up with your delivery details to place orders."
-            : "Login to your Viswas Oils account."}
+            : "Login to your Vishwash Foods account."}
         </p>
         {notice && <p className="notice">{notice}</p>}
         {error && <p className="form-error">{error}</p>}

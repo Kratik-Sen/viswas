@@ -11,7 +11,7 @@ export default function HomePage({ products, categories, addToCart }) {
         <div className="hero-content">
           <p className="eyebrow">Farm Fresh · Cold Pressed · Pure</p>
           <h1>
-            <em>Viswas</em> Cold<br />Pressed Oils
+            <em>Vishwash</em> Foods<br />Cold Pressed Oils
           </h1>
           <p className="hero-subtitle">
             Groundnut, coconut, mustard, sesame, almond, sunflower and flaxseed oils —
@@ -93,7 +93,7 @@ export default function HomePage({ products, categories, addToCart }) {
       {/* ===== WHY CHOOSE US ===== */}
       <section className="why-section">
         <div className="why-section-inner">
-          <h2>Why Choose Viswas Oils?</h2>
+          <h2>Why Choose Vishwash Foods?</h2>
           <p className="section-sub">We believe in complete transparency — from source to shelf.</p>
           <div className="why-grid">
             <div className="why-card">

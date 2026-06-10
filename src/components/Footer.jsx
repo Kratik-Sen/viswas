@@ -7,8 +7,8 @@ export default function Footer() {
         {/* Brand Column */}
         <div className="footer-brand">
           <div className="footer-brand-logo">
-            <img className="footer-logo-img" src="images/logo.png" alt="Viswas Oils" />
-            <strong>Viswas Oils</strong>
+            <img className="footer-logo-img" src="images/logo.png" alt="Vishwash Foods" />
+            <strong>Vishwash Foods</strong>
           </div>
           <p>
             Bringing you the finest cold pressed oils, sourced directly from Indian farms.
@@ -62,7 +62,7 @@ export default function Footer() {
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
               </svg>
-              care@viswasoils.in
+              care@vishwashfoods.in
             </div>
             <div className="footer-contact-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -77,7 +77,7 @@ export default function Footer() {
 
       {/* Footer Bottom */}
       <div className="footer-bottom">
-        <span>© {year} Viswas Oils. All rights reserved. Made with 🌿 in India.</span>
+        <span>© {year} Vishwash Foods. All rights reserved. Made with 🌿 in India.</span>
         <nav>
           <a href="#/privacy">Privacy</a>
           <a href="#/privacy">Terms</a>

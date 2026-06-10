@@ -49,10 +49,10 @@ export default function Nav({ route, user, cartCount, openAuth, logout }) {
       {/* Main Header */}
       <header className={`site-header ${open ? "menu-open" : ""}`}>
         <div className="header-inner">
-          <a href="#/home" className="brand" aria-label="Viswas Oils home">
-            <img className="brand-logo" src="images/logo.png" alt="Viswas Oils Logo" />
+          <a href="#/home" className="brand" aria-label="Vishwash Foods home">
+            <img className="brand-logo" src="images/logo.png" alt="Vishwash Foods Logo" />
             <div className="brand-text">
-              <strong>Viswas Oils</strong>
+              <strong>Vishwash Foods</strong>
               <small>Cold Pressed · Pure · Natural</small>
             </div>
           </a>
@@ -111,10 +111,10 @@ export default function Nav({ route, user, cartCount, openAuth, logout }) {
 
       <aside className={`mobile-menu-panel ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="mobile-menu-head">
-          <a href="#/home" className="brand" aria-label="Viswas Oils home">
-            <img className="brand-logo" src="images/logo.png" alt="Viswas Oils Logo" />
+          <a href="#/home" className="brand" aria-label="Vishwash Foods home">
+            <img className="brand-logo" src="images/logo.png" alt="Vishwash Foods Logo" />
             <div className="brand-text">
-              <strong>Viswas Oils</strong>
+              <strong>Vishwash Foods</strong>
               <small>Cold Pressed &middot; Pure &middot; Natural</small>
             </div>
           </a>

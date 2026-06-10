@@ -5,7 +5,7 @@ export default function AboutPage() {
         <p className="eyebrow">Our Story</p>
         <h1>Cooking Oil with Source,<br />Care & Clarity.</h1>
         <p>
-          Viswas Oils is built for homes that want reliable, wholesome cooking oils without
+          Vishwash Foods is built for homes that want reliable, wholesome cooking oils without
           confusion or compromise. We source directly from Indian farms and press every drop
           using traditional cold-press methods — retaining natural nutrients, aroma, and flavour.
         </p>
@@ -63,7 +63,7 @@ export default function AboutPage() {
               Ready to experience the difference?
             </h2>
             <p style={{ color: "rgba(255,255,255,0.8)", margin: 0, fontSize: "0.95rem" }}>
-              Shop our full range of cold pressed oils and taste the Viswas difference.
+              Shop our full range of cold pressed oils and taste the Vishwash Foods difference.
             </p>
           </div>
           <a

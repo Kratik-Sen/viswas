@@ -121,7 +121,7 @@ export default function CartPage({ cart, user, openAuth, updateCartQuantity, rem
           key: createdOrder.razorpay_key_id,
           amount: createdOrder.amount,
           currency: createdOrder.currency,
-          name: "Viswas Oils",
+          name: "Vishwash Foods",
           description: "Cooking oil order",
           order_id: createdOrder.razorpay_order_id,
           retry: {

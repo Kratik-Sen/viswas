@@ -209,7 +209,7 @@ export default function App() {
     <div className="app-shell">
       <Nav route={route} user={user} cartCount={hydratedCart.length} openAuth={openAuth} logout={logout} />
       {toast && <div className="toast">{toast}</div>}
-      {loading ? <main className="loading-page">Loading Viswas Oils...</main> : <Router pageProps={pageProps} />}
+      {loading ? <main className="loading-page">Loading Vishwash Foods...</main> : <Router pageProps={pageProps} />}
       <Footer />
       {authMode && (
         <AuthModal
@@ -220,7 +220,7 @@ export default function App() {
           onAuthed={(nextUser) => {
             setUser(nextUser);
             setAuthMode(null);
-            showToast("Welcome to Viswas Oils.");
+            showToast("Welcome to Vishwash Foods.");
           }}
         />
       )}
