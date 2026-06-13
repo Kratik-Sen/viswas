@@ -6,7 +6,8 @@ export function variantImage(variant) {
 }
 
 export function productImage(product, variant = null) {
-  return variantImage(variant) || publicAssetUrl(product?.images?.[0]?.url || product?.image || PLACEHOLDER_IMAGE);
+  const firstVariantImage = (product?.variants || []).find((item) => item.image_url)?.image_url;
+  return variantImage(variant) || publicAssetUrl(product?.images?.[0]?.url || product?.image || firstVariantImage || PLACEHOLDER_IMAGE);
 }
 
 export function productImages(product) {
