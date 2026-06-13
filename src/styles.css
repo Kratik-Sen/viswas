@@ -668,7 +668,7 @@ h1, h2, h3, h4 {
 .category-strip-shell {
   position: relative;
   width: 100%;
-  background: var(--cream);
+  background: #fff;
   border-bottom: 1px solid var(--line);
 }
 
@@ -693,12 +693,12 @@ h1, h2, h3, h4 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  min-width: 104px;
-  padding: 18px 22px 14px;
+  gap: 7px;
+  min-width: 110px;
+  padding: 12px 18px 10px;
   color: var(--muted);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   white-space: nowrap;
   border-bottom: 3px solid transparent;
@@ -721,28 +721,33 @@ h1, h2, h3, h4 {
 }
 
 .cat-icon-wrap {
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 7px;
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  background: #fff;
   transition: var(--transition);
 }
 
-.cat-icon-wrap svg {
-  width: 44px;
-  height: 44px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.cat-icon-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   transition: var(--transition);
 }
 
-.category-logo-strip a:hover .cat-icon-wrap svg,
-.category-logo-strip a.active .cat-icon-wrap svg {
-  stroke: var(--green);
+.category-logo-strip a:hover .cat-icon-wrap,
+.category-logo-strip a.active .cat-icon-wrap {
+  background: var(--green-bg);
+  box-shadow: 0 4px 12px rgba(26,77,46,0.16);
+}
+
+.category-logo-strip a:hover .cat-icon-wrap img,
+.category-logo-strip a.active .cat-icon-wrap img {
   transform: translateY(-2px);
 }
 
@@ -1721,6 +1726,22 @@ h1, h2, h3, h4 {
   color: var(--green);
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.category-lineup-banner {
+  min-height: clamp(190px, 25vw, 330px);
+  margin: 18px 0 22px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background-color: #fff7df;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  overflow: hidden;
+}
+
+.category-products-section {
+  margin-top: 28px;
 }
 
 /* ============================================================
@@ -3355,6 +3376,11 @@ h1, h2, h3, h4 {
     order: -1;
   }
 
+  .category-lineup-banner {
+    min-height: clamp(130px, 42vw, 220px);
+    margin-bottom: 20px;
+  }
+
   .store-strip {
     margin-top: -32px;
   }
@@ -3369,13 +3395,9 @@ h1, h2, h3, h4 {
   }
 
   .cat-icon-wrap {
-    width: 48px;
-    height: 48px;
-  }
-
-  .cat-icon-wrap svg {
-    width: 38px;
-    height: 38px;
+    width: 50px;
+    height: 50px;
+    padding: 6px;
   }
 
   .category-slide-button {

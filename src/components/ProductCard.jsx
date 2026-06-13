@@ -16,7 +16,7 @@ function CheckIcon() {
   );
 }
 
-export default function ProductCard({ product, addToCart, showVariantButtons = false }) {
+export default function ProductCard({ product, addToCart, showVariantButtons = false, hideVariantControl = false }) {
   const [quantity, setQuantity] = useState(1);
   const [variantId, setVariantId] = useState(product.variants?.[0]?.id || "");
 
@@ -29,6 +29,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
   const image = productImage(product, selectedVariant);
   const hoverImage = PRODUCT_HOVER_IMAGE;
   const out = Number(selectedVariant.stock) <= 0;
+  const displayName = product.display_name || product.name;
   const openProduct = () => {
     window.location.hash = productHref(product);
   };
@@ -50,7 +51,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
       className="product-card"
       role="link"
       tabIndex="0"
-      aria-label={`View ${product.name}`}
+      aria-label={`View ${displayName}`}
       onClick={openProduct}
       onKeyDown={handleCardKeyDown}
     >
@@ -60,7 +61,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
         <img
           className="product-img-primary"
           src={image}
-          alt={product.name}
+          alt={displayName}
         />
 
         {hoverImage && (
@@ -104,8 +105,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
       <div className="product-body">
         <div>
           <span className="pill">{product.category}</span>
-          <h3>{product.name}</h3>
-          <p>{product.description || "Pure Wood pressed/Cold pressed oil for everyday Indian cooking."}</p>
+          <h3>{displayName}</h3>
         </div>
 
         <div>
@@ -118,7 +118,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
             </span>
           </div>
 
-          {showVariantButtons && (
+          {!hideVariantControl && showVariantButtons && (
             <div className="card-variant-options" onClick={stopCardNavigation}>
               <span>Available sizes</span>
               <div>
@@ -144,7 +144,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
             </div>
           )}
 
-          {!showVariantButtons && (
+          {!hideVariantControl && !showVariantButtons && variants.length > 1 && (
           <label className="variant-select" onClick={stopCardNavigation}>
             Size
             <select
@@ -171,7 +171,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
               disabled={out}
               onKeyDown={blockNumberInput}
               onChange={(e) => setQuantity(e.target.value)}
-              aria-label={`Quantity for ${product.name}`}
+              aria-label={`Quantity for ${displayName}`}
             />
             <button
               className="primary-button"
