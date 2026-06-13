@@ -1,11 +1,11 @@
 function apiBaseUrl() {
+  if (import.meta.env.DEV) {
+    return "/api";
+  }
+
   const configured = import.meta.env.VITE_API_BASE_URL;
   if (configured) {
     return configured.replace(/\/$/, "");
-  }
-
-  if (import.meta.env.DEV) {
-    return "/api";
   }
 
   return window.location.pathname.includes("/dist") ? "../api" : "api";
