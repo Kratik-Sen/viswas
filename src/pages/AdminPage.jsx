@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import OrderList from "../components/OrderList.jsx";
-import { api } from "../lib/api.js";
+import { api, publicAssetUrl } from "../lib/api.js";
 import { money } from "../lib/format.js";
 import { productImage, productImages } from "../lib/products.js";
 import { blockNumberInput, DECIMAL_PATTERN, DIGITS_PATTERN, isDecimal, isDigits, isTextValue, TEXT_PATTERN } from "../lib/validation.js";
@@ -11,7 +11,7 @@ function rowKey() {
 
 export default function AdminPage({ user, products, categories, openAuth, showToast, loadProducts }) {
   const [imageSlots, setImageSlots] = useState([Date.now()]);
-  const [variantRows, setVariantRows] = useState([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+  const [variantRows, setVariantRows] = useState([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
   const [settings, setSettings] = useState(null);
   const [orders, setOrders] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -95,7 +95,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
       showToast(data.message);
       form.reset();
       setImageSlots([Date.now()]);
-      setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+      setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
       setEditingProduct(null);
       await loadProducts();
     } catch (error) {
@@ -120,7 +120,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
       if (editingProduct?.id === product.id) {
         setEditingProduct(null);
         setImageSlots([Date.now()]);
-        setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+        setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
       }
       await loadProducts();
     } catch (error) {
@@ -163,6 +163,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
         size: variant.size_label || "1L",
         price: variant.price ?? "",
         stock: variant.stock ?? "",
+        imageUrl: variant.image_url || "",
       }))
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -172,7 +173,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
     setEditingProduct(null);
     formRef.current?.reset();
     setImageSlots([Date.now()]);
-    setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "" }]);
+    setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
   }
 
   const totalStock = products.reduce((sum, p) => sum + Number(p.stock || 0), 0);
@@ -227,7 +228,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
             </select>
           </label>
           <div className="variant-inputs">
-            <span>Sizes and Prices</span>
+            <span>Sizes, Prices and Bottle Images</span>
             {variantRows.map((row) => (
               <div className="variant-row" key={row.key}>
                 <label>
@@ -260,6 +261,13 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                     placeholder="0"
                   />
                 </label>
+                <label className="variant-image-field">
+                  Bottle image
+                  {row.imageUrl && (
+                    <img className="variant-image-preview" src={publicAssetUrl(row.imageUrl)} alt={`${row.size || "Size"} bottle`} />
+                  )}
+                  <input type="file" name={`variant_images[${row.key}]`} accept="image/*" />
+                </label>
                 {variantRows.length > 1 && (
                   <button
                     type="button"
@@ -274,7 +282,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
             <button
               type="button"
               className="ghost-button"
-              onClick={() => setVariantRows((rows) => [...rows, { key: rowKey(), size: "", price: "", stock: "" }])}
+              onClick={() => setVariantRows((rows) => [...rows, { key: rowKey(), size: "", price: "", stock: "", imageUrl: "" }])}
             >
               + Add size variant
             </button>

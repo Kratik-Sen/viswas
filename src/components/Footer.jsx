@@ -11,12 +11,12 @@ export default function Footer() {
             <strong>Vishwash Foods</strong>
           </div>
           <p>
-            Bringing you the finest cold pressed oils, sourced directly from Indian farms.
+            Bringing you the finest Wood pressed/Cold pressed oils, sourced directly from Indian farms.
             Pure, natural, and full of goodness for your everyday cooking.
           </p>
           <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
             <span style={{ padding: "5px 11px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", fontSize: "0.72rem", color: "rgba(255,255,255,0.6)" }}>
-              🌿 Cold Pressed
+              🌿 Wood pressed/Cold pressed
             </span>
             <span style={{ padding: "5px 11px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", fontSize: "0.72rem", color: "rgba(255,255,255,0.6)" }}>
               ✓ Lab Tested

@@ -18,10 +18,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
 
 const PRODUCT_CATEGORIES = [
     'Groundnut Oil',
-    'Coconut Oil',
     'Sunflower Oil',
     'Black Mustard Oil',
     'Yellow Mustard Oil',
+    'Coconut Oil',
     'White Sesame Oil',
     'Black Sesame Oil',
     'Almond Oil',
@@ -452,10 +452,42 @@ function product_images(int $productId): array
     return $stmt->fetchAll();
 }
 
-function product_variants(int $productId): array
+function table_column_exists(string $table, string $column): bool
 {
     $stmt = pdo()->prepare(
-        'SELECT id, product_id, size_label, price, stock, active
+        'SELECT COUNT(*)
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+    );
+    $stmt->execute([$table, $column]);
+
+    return (int) $stmt->fetchColumn() > 0;
+}
+
+function ensure_variant_image_columns(): void
+{
+    static $ready = false;
+    if ($ready) {
+        return;
+    }
+
+    if (!table_column_exists('product_variants', 'image_url')) {
+        pdo()->exec('ALTER TABLE product_variants ADD COLUMN image_url TEXT NULL AFTER stock');
+    }
+
+    if (!table_column_exists('product_variants', 'image_public_id')) {
+        pdo()->exec('ALTER TABLE product_variants ADD COLUMN image_public_id VARCHAR(255) NULL AFTER image_url');
+    }
+
+    $ready = true;
+}
+
+function product_variants(int $productId): array
+{
+    ensure_variant_image_columns();
+
+    $stmt = pdo()->prepare(
+        'SELECT id, product_id, size_label, price, stock, image_url, image_public_id, active
          FROM product_variants
          WHERE product_id = ? AND active = 1
          ORDER BY id ASC'
@@ -469,6 +501,8 @@ function product_variants(int $productId): array
         $variant['price'] = (float) $variant['price'];
         $variant['stock'] = (int) $variant['stock'];
         $variant['active'] = (int) $variant['active'] === 1;
+        $variant['image_url'] = $variant['image_url'] ?: null;
+        $variant['image_public_id'] = $variant['image_public_id'] ?: null;
     }
 
     return $variants;

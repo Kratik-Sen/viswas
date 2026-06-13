@@ -32,6 +32,39 @@ function uploaded_files(string $field): array
     return $normalized;
 }
 
+function uploaded_file_map(string $field): array
+{
+    if (!isset($_FILES[$field])) {
+        return [];
+    }
+
+    $files = $_FILES[$field];
+    if (!is_array($files['name'])) {
+        if (($files['name'] ?? '') === '') {
+            return [];
+        }
+
+        return ['0' => $files];
+    }
+
+    $normalized = [];
+    foreach ($files['name'] as $key => $name) {
+        if (is_array($name) || $name === '') {
+            continue;
+        }
+
+        $normalized[(string) $key] = [
+            'name' => $name,
+            'type' => $files['type'][$key],
+            'tmp_name' => $files['tmp_name'][$key],
+            'error' => $files['error'][$key],
+            'size' => $files['size'][$key],
+        ];
+    }
+
+    return $normalized;
+}
+
 function product_variant_payload(array $post): array
 {
     $rawVariants = $post['variants'] ?? [];
@@ -40,7 +73,7 @@ function product_variant_payload(array $post): array
     }
 
     $variants = [];
-    foreach ($rawVariants as $variant) {
+    foreach ($rawVariants as $key => $variant) {
         if (!is_array($variant)) {
             continue;
         }
@@ -63,6 +96,8 @@ function product_variant_payload(array $post): array
         }
 
         $variants[] = [
+            'key' => (string) $key,
+            'existing_id' => ctype_digit((string) $key) ? (int) $key : null,
             'size' => $size,
             'price' => (float) $price,
             'stock' => (int) $stock,
@@ -97,7 +132,13 @@ if (method_is('GET')) {
         $sql .= ' AND category = ?';
         $params[] = $_GET['category'];
     }
-    $sql .= ' ORDER BY created_at DESC, id DESC';
+
+    $orderCases = [];
+    foreach (PRODUCT_CATEGORIES as $index => $orderedCategory) {
+        $orderCases[] = 'WHEN ? THEN ' . ($index + 1);
+        $params[] = $orderedCategory;
+    }
+    $sql .= ' ORDER BY CASE category ' . implode(' ', $orderCases) . ' ELSE 999 END, created_at DESC, id DESC';
 
     $stmt = pdo()->prepare($sql);
     $stmt->execute($params);
@@ -159,7 +200,9 @@ if (!in_array($category, PRODUCT_CATEGORIES, true)) {
     fail('Invalid product category.', 422);
 }
 
+ensure_variant_image_columns();
 $variants = product_variant_payload($_POST);
+$variantImageFiles = uploaded_file_map('variant_images');
 $price = (float) $variants[0]['price'];
 $stock = array_sum(array_map(static fn(array $variant): int => (int) $variant['stock'], $variants));
 if ($price <= 0) {
@@ -217,14 +260,59 @@ try {
 
     $imageInsert = $db->prepare('INSERT INTO product_images (product_id, url, public_id) VALUES (?, ?, ?)');
     $files = uploaded_files('images');
+    $existingVariantImagesById = [];
+    $existingVariantImagesBySize = [];
+    if ($action === 'update') {
+        $variantImageLookup = $db->prepare(
+            'SELECT id, size_label, image_url, image_public_id
+             FROM product_variants
+             WHERE product_id = ?'
+        );
+        $variantImageLookup->execute([$productId]);
+        foreach ($variantImageLookup->fetchAll() as $existingVariant) {
+            $image = [
+                'url' => $existingVariant['image_url'] ?: null,
+                'public_id' => $existingVariant['image_public_id'] ?: null,
+            ];
+            $existingVariantImagesById[(int) $existingVariant['id']] = $image;
+            $existingVariantImagesBySize[strtolower((string) $existingVariant['size_label'])] = $image;
+        }
+    }
+
     $deleteVariants = $db->prepare('DELETE FROM product_variants WHERE product_id = ?');
     $deleteVariants->execute([$productId]);
 
     $variantInsert = $db->prepare(
-        'INSERT INTO product_variants (product_id, size_label, price, stock, active) VALUES (?, ?, ?, ?, 1)'
+        'INSERT INTO product_variants (product_id, size_label, price, stock, image_url, image_public_id, active) VALUES (?, ?, ?, ?, ?, ?, 1)'
     );
     foreach ($variants as $variant) {
-        $variantInsert->execute([$productId, $variant['size'], $variant['price'], $variant['stock']]);
+        $imageUrl = null;
+        $imagePublicId = null;
+        $variantKey = $variant['key'];
+
+        if (isset($variantImageFiles[$variantKey])) {
+            $uploaded = upload_product_image($variantImageFiles[$variantKey]);
+            $imageUrl = $uploaded['url'];
+            $imagePublicId = $uploaded['public_id'];
+        } elseif ($variant['existing_id'] && isset($existingVariantImagesById[$variant['existing_id']])) {
+            $imageUrl = $existingVariantImagesById[$variant['existing_id']]['url'];
+            $imagePublicId = $existingVariantImagesById[$variant['existing_id']]['public_id'];
+        } else {
+            $existingImage = $existingVariantImagesBySize[strtolower($variant['size'])] ?? null;
+            if ($existingImage) {
+                $imageUrl = $existingImage['url'];
+                $imagePublicId = $existingImage['public_id'];
+            }
+        }
+
+        $variantInsert->execute([
+            $productId,
+            $variant['size'],
+            $variant['price'],
+            $variant['stock'],
+            $imageUrl,
+            $imagePublicId,
+        ]);
     }
 
     foreach ($files as $file) {

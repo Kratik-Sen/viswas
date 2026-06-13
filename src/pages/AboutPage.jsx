@@ -7,7 +7,7 @@ export default function AboutPage() {
         <p>
           Vishwash Foods is built for homes that want reliable, wholesome cooking oils without
           confusion or compromise. We source directly from Indian farms and press every drop
-          using traditional cold-press methods — retaining natural nutrients, aroma, and flavour.
+          using traditional Wood pressed/Cold pressed methods — retaining natural nutrients, aroma, and flavour.
         </p>
         <p>
           Our catalogue focuses on familiar kitchen staples, clear categories, live stock
@@ -43,7 +43,7 @@ export default function AboutPage() {
             </svg>
           </div>
           <strong>Purity Guaranteed</strong>
-          <p>All our oils are cold pressed with zero additives, no heat processing, and independently lab certified.</p>
+          <p>All our oils are Wood pressed/Cold pressed with zero additives, no heat processing, and independently lab certified.</p>
         </div>
       </section>
 
@@ -63,7 +63,7 @@ export default function AboutPage() {
               Ready to experience the difference?
             </h2>
             <p style={{ color: "rgba(255,255,255,0.8)", margin: 0, fontSize: "0.95rem" }}>
-              Shop our full range of cold pressed oils and taste the Vishwash Foods difference.
+              Shop our full range of Wood pressed/Cold pressed oils and taste the Vishwash Foods difference.
             </p>
           </div>
           <a

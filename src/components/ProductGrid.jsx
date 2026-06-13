@@ -1,6 +1,6 @@
 import ProductCard from "./ProductCard.jsx";
 
-export default function ProductGrid({ products, addToCart }) {
+export default function ProductGrid({ products, addToCart, showVariantButtons = false }) {
   if (!products.length) {
     return <div className="empty-state">No products are available in this category yet.</div>;
   }
@@ -8,7 +8,7 @@ export default function ProductGrid({ products, addToCart }) {
   return (
     <div className="product-grid">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} addToCart={addToCart} />
+        <ProductCard key={product.id} product={product} addToCart={addToCart} showVariantButtons={showVariantButtons} />
       ))}
     </div>
   );

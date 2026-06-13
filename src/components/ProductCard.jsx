@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { publicAssetUrl } from "../lib/api.js";
 import { money } from "../lib/format.js";
-import { productImages } from "../lib/products.js";
+import { productImage } from "../lib/products.js";
 import { productHref } from "../lib/routing.js";
 import { blockNumberInput, DIGITS_PATTERN } from "../lib/validation.js";
 
@@ -16,13 +16,9 @@ function CheckIcon() {
   );
 }
 
-export default function ProductCard({ product, addToCart }) {
+export default function ProductCard({ product, addToCart, showVariantButtons = false }) {
   const [quantity, setQuantity] = useState(1);
   const [variantId, setVariantId] = useState(product.variants?.[0]?.id || "");
-
-  const images = productImages(product);
-  const image = images[0]?.url;
-  const hoverImage = PRODUCT_HOVER_IMAGE;
 
   const variants = product.variants?.length
     ? product.variants
@@ -30,6 +26,8 @@ export default function ProductCard({ product, addToCart }) {
 
   const selectedVariant =
     variants.find((v) => String(v.id) === String(variantId)) || variants[0];
+  const image = productImage(product, selectedVariant);
+  const hoverImage = PRODUCT_HOVER_IMAGE;
   const out = Number(selectedVariant.stock) <= 0;
   const openProduct = () => {
     window.location.hash = productHref(product);
@@ -107,7 +105,7 @@ export default function ProductCard({ product, addToCart }) {
         <div>
           <span className="pill">{product.category}</span>
           <h3>{product.name}</h3>
-          <p>{product.description || "Pure cold pressed oil for everyday Indian cooking."}</p>
+          <p>{product.description || "Pure Wood pressed/Cold pressed oil for everyday Indian cooking."}</p>
         </div>
 
         <div>
@@ -120,6 +118,33 @@ export default function ProductCard({ product, addToCart }) {
             </span>
           </div>
 
+          {showVariantButtons && (
+            <div className="card-variant-options" onClick={stopCardNavigation}>
+              <span>Available sizes</span>
+              <div>
+                {variants.map((v) => {
+                  const isSelected = String(v.id) === String(selectedVariant.id);
+                  const unavailable = Number(v.stock) <= 0;
+
+                  return (
+                    <button
+                      className={isSelected ? "selected" : ""}
+                      type="button"
+                      key={v.id || v.size_label}
+                      disabled={unavailable}
+                      aria-pressed={isSelected}
+                      onClick={() => setVariantId(v.id || "")}
+                    >
+                      <strong>{v.size_label}</strong>
+                      <small>{money(v.price)}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {!showVariantButtons && (
           <label className="variant-select" onClick={stopCardNavigation}>
             Size
             <select
@@ -133,6 +158,7 @@ export default function ProductCard({ product, addToCart }) {
               ))}
             </select>
           </label>
+          )}
 
           <div className="product-actions" style={{ marginTop: "10px" }} onClick={stopCardNavigation}>
             <input

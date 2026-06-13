@@ -1,9 +1,9 @@
 export const CATEGORIES = [
   "Groundnut Oil",
-  "Coconut Oil",
   "Sunflower Oil",
   "Black Mustard Oil",
   "Yellow Mustard Oil",
+  "Coconut Oil",
   "White Sesame Oil",
   "Black Sesame Oil",
   "Almond Oil",

@@ -125,7 +125,7 @@ export default function App() {
           price: selectedVariant.price,
           stock,
           quantity: qty,
-          image: productImage(product),
+          image: productImage(product, selectedVariant),
         },
       ];
     });
@@ -184,7 +184,7 @@ export default function App() {
           category: liveProduct.category,
           price: liveVariant.price,
           stock: liveVariant.stock,
-          image: productImage(liveProduct),
+          image: productImage(liveProduct, liveVariant),
         };
       }),
     [cart, products]

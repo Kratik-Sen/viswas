@@ -91,7 +91,7 @@ $paymentLabel = $order['payment_method'] === 'cod' ? 'Cash on Delivery' : 'Razor
 $lines = ['0.09 0.42 0.31 RG', '1.4 w'];
 
 pdf_text($lines, 48, 790, 24, 'Viswas Oils');
-pdf_text($lines, 48, 768, 11, 'Cold Pressed Oils');
+pdf_text($lines, 48, 768, 11, 'Wood pressed/Cold pressed Oils');
 pdf_text($lines, 390, 790, 18, 'Invoice #' . (int) $order['id']);
 pdf_text($lines, 390, 770, 10, 'Date: ' . date('d M Y, h:i A', strtotime($order['created_at'])));
 pdf_text($lines, 390, 754, 10, 'Payment: ' . $paymentLabel . ' (' . $order['payment_status'] . ')');

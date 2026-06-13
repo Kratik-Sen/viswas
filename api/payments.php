@@ -14,6 +14,7 @@ if (!method_is('POST')) {
 function collect_order_items(array $items): array
 {
     $db = pdo();
+    ensure_variant_image_columns();
     $productStmt = $db->prepare('SELECT * FROM products WHERE id = ? AND active = 1');
     $variantStmt = $db->prepare('SELECT * FROM product_variants WHERE id = ? AND product_id = ? AND active = 1');
     $defaultVariantStmt = $db->prepare('SELECT * FROM product_variants WHERE product_id = ? AND active = 1 ORDER BY id ASC LIMIT 1');
@@ -51,8 +52,11 @@ function collect_order_items(array $items): array
             fail($product['name'] . ' ' . $variant['size_label'] . ' has only ' . $variant['stock'] . ' item(s) available.', 422);
         }
 
-        $imageStmt->execute([$productId]);
-        $image = $imageStmt->fetchColumn() ?: null;
+        $image = $variant['image_url'] ?: null;
+        if ($image === null) {
+            $imageStmt->execute([$productId]);
+            $image = $imageStmt->fetchColumn() ?: null;
+        }
         $total += (float) $variant['price'] * $quantity;
         $orderItems[] = [
             'product' => $product,

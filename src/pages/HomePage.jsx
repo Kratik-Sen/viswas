@@ -9,9 +9,9 @@ export default function HomePage({ products, categories, addToCart }) {
       {/* ===== HERO ===== */}
       <section className="hero">
         <div className="hero-content">
-          <p className="eyebrow">Farm Fresh · Cold Pressed · Pure</p>
+          <p className="eyebrow">Farm Fresh · Wood pressed/Cold pressed · Pure</p>
           <h1>
-            <em>Vishwash</em> Foods<br />Cold Pressed Oils
+            <em>Vishwash</em> Foods<br />Wood pressed/Cold pressed Oils
           </h1>
           <p className="hero-subtitle">
             Groundnut, coconut, mustard, sesame, almond, sunflower and flaxseed oils —
@@ -102,8 +102,8 @@ export default function HomePage({ products, categories, addToCart }) {
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </div>
-              <strong>Cold Pressed Method</strong>
-              <p>Our oils are extracted using traditional cold pressing — no heat, no chemicals, just pure goodness preserved.</p>
+              <strong>Wood pressed/Cold pressed Method</strong>
+              <p>Our oils are extracted using traditional Wood pressed/Cold pressed extraction — no heat, no chemicals, just pure goodness preserved.</p>
             </div>
             <div className="why-card">
               <div className="why-icon">

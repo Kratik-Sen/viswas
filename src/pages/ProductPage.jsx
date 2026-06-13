@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { money } from "../lib/format.js";
-import { productImages } from "../lib/products.js";
+import { productImages, variantImage } from "../lib/products.js";
 import { productIdFromParam } from "../lib/routing.js";
 import { blockNumberInput, DIGITS_PATTERN } from "../lib/validation.js";
 
@@ -29,7 +29,7 @@ function unitPriceLabel(variant) {
 
 function shortDescription(product) {
   if (product?.description) return product.description;
-  return "Pure cold pressed oil for everyday Indian cooking.";
+  return "Pure Wood pressed/Cold pressed oil for everyday Indian cooking.";
 }
 
 export default function ProductPage({ route, products, addToCart, showToast }) {
@@ -45,7 +45,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
     variants.find((variant) => String(variant.id) === String(variantId)) || variants[0];
   const stock = Number(selectedVariant?.stock || 0);
   const outOfStock = stock <= 0;
-  const selectedImage = images[imageIndex % Math.max(1, images.length)]?.url;
+  const selectedImage = variantImage(selectedVariant) || images[imageIndex % Math.max(1, images.length)]?.url;
   const selectedPrice = money(selectedVariant?.price || product?.price || 0);
 
   useEffect(() => {
@@ -241,7 +241,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
             <h2>Product Description</h2>
             <p>{shortDescription(product)}</p>
             <ul>
-              <li>Cold pressed for natural aroma and nutrients.</li>
+              <li>Wood pressed/Cold pressed for natural aroma and nutrients.</li>
               <li>Packed fresh with live stock tracking.</li>
               <li>Best suited for daily Indian cooking.</li>
             </ul>
