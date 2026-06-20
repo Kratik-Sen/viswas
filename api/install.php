@@ -43,6 +43,18 @@ $columnCheck->execute(['product_variants', 'image_public_id']);
 if ((int) $columnCheck->fetchColumn() === 0) {
     $db->exec('ALTER TABLE product_variants ADD COLUMN image_public_id VARCHAR(255) NULL AFTER image_url');
 }
+$columnCheck->execute(['products', 'product_benefits']);
+if ((int) $columnCheck->fetchColumn() === 0) {
+    $db->exec('ALTER TABLE products ADD COLUMN product_benefits TEXT NULL AFTER description');
+}
+$columnCheck->execute(['products', 'banner_image_url']);
+if ((int) $columnCheck->fetchColumn() === 0) {
+    $db->exec('ALTER TABLE products ADD COLUMN banner_image_url TEXT NULL AFTER product_benefits');
+}
+$columnCheck->execute(['products', 'banner_image_public_id']);
+if ((int) $columnCheck->fetchColumn() === 0) {
+    $db->exec('ALTER TABLE products ADD COLUMN banner_image_public_id VARCHAR(255) NULL AFTER banner_image_url');
+}
 
 $adminEmail = env_value('ADMIN_EMAIL', 'admin@viswas.test');
 $adminPassword = env_value('ADMIN_PASSWORD', 'admin123');

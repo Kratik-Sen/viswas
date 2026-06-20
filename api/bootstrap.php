@@ -482,6 +482,28 @@ function ensure_variant_image_columns(): void
     $ready = true;
 }
 
+function ensure_product_banner_columns(): void
+{
+    static $ready = false;
+    if ($ready) {
+        return;
+    }
+
+    if (!table_column_exists('products', 'banner_image_url')) {
+        pdo()->exec('ALTER TABLE products ADD COLUMN banner_image_url TEXT NULL AFTER description');
+    }
+
+    if (!table_column_exists('products', 'product_benefits')) {
+        pdo()->exec('ALTER TABLE products ADD COLUMN product_benefits TEXT NULL AFTER description');
+    }
+
+    if (!table_column_exists('products', 'banner_image_public_id')) {
+        pdo()->exec('ALTER TABLE products ADD COLUMN banner_image_public_id VARCHAR(255) NULL AFTER banner_image_url');
+    }
+
+    $ready = true;
+}
+
 function product_variants(int $productId): array
 {
     ensure_variant_image_columns();
@@ -510,10 +532,15 @@ function product_variants(int $productId): array
 
 function normalize_product(array $row): array
 {
+    ensure_product_banner_columns();
+
     $row['id'] = (int) $row['id'];
     $row['price'] = (float) $row['price'];
     $row['stock'] = (int) $row['stock'];
     $row['active'] = (int) $row['active'] === 1;
+    $row['product_benefits'] = $row['product_benefits'] ?? null;
+    $row['banner_image_url'] = $row['banner_image_url'] ?? null;
+    $row['banner_image_public_id'] = $row['banner_image_public_id'] ?? null;
     $row['images'] = product_images((int) $row['id']);
     $row['variants'] = product_variants((int) $row['id']);
 

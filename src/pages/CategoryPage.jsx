@@ -9,7 +9,12 @@ function categoryImage(category) {
   return publicAssetUrl(`public/images/${slugify(category)}.png`);
 }
 
-function categoryBannerImage(category) {
+function categoryBannerImage(category, products) {
+  const uploadedBanner = products.find((product) => product.banner_image_url)?.banner_image_url;
+  if (uploadedBanner) {
+    return publicAssetUrl(uploadedBanner);
+  }
+
   const banners = {
     "Coconut Oil": "public/images/c.png",
     "Groundnut Oil": "public/images/g.png",
@@ -67,7 +72,9 @@ export default function CategoryPage({ route, products, categories, addToCart })
     const filtered = products.filter((product) => {
       const matchesCategory = selected ? product.category === selected : true;
       const matchesQuery = normalizedQuery
-        ? `${product.name} ${product.category} ${product.description || ""}`.toLowerCase().includes(normalizedQuery)
+        ? `${product.name} ${product.category} ${product.description || ""} ${product.product_benefits || ""}`
+            .toLowerCase()
+            .includes(normalizedQuery)
         : true;
       return matchesCategory && matchesQuery;
     });
@@ -81,7 +88,7 @@ export default function CategoryPage({ route, products, categories, addToCart })
   }, [products, query, selected, sort]);
 
   const sizes = useMemo(() => (selected ? categorySizes(categoryProducts) : []), [categoryProducts, selected]);
-  const bannerImage = selected ? categoryBannerImage(selected) : "";
+  const bannerImage = selected ? categoryBannerImage(selected, categoryProducts) : "";
   const productCards = useMemo(() => (selected ? variantProductCards(visible) : visible), [selected, visible]);
 
   return (

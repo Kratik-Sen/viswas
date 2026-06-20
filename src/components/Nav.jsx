@@ -53,7 +53,7 @@ export default function Nav({ route, user, cartCount, openAuth, logout }) {
             <img className="brand-logo" src="images/logo.png" alt="Vishwash Foods Logo" />
             <div className="brand-text">
               <strong>Vishwash Foods</strong>
-              <small>Wood pressed/Cold pressed · Pure · Natural</small>
+              <small>Wood pressed/Cold pressed</small>
             </div>
           </a>
 

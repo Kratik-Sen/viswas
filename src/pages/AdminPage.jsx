@@ -227,6 +227,13 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
               ))}
             </select>
           </label>
+          <label className="banner-image-field">
+            Category page banner image
+            {editingProduct?.banner_image_url && (
+              <img className="banner-image-preview" src={publicAssetUrl(editingProduct.banner_image_url)} alt={`${editingProduct.category} banner`} />
+            )}
+            <input type="file" name="banner_image" accept="image/*" />
+          </label>
           <div className="variant-inputs">
             <span>Sizes, Prices and Bottle Images</span>
             {variantRows.map((row) => (
@@ -289,7 +296,16 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
           </div>
           <label>
             Description
-            <textarea name="description" rows="4" defaultValue={editingProduct?.description || ""} placeholder="Describe the product's benefits, source, and usage..." />
+            <textarea name="description" rows="3" defaultValue={editingProduct?.description || ""} placeholder="Short product summary shown above the reviews..." />
+          </label>
+          <label>
+            Product benefits
+            <textarea
+              name="product_benefits"
+              rows="5"
+              defaultValue={editingProduct?.product_benefits || ""}
+              placeholder="Add one benefit per line. These appear in the Product Description list..."
+            />
           </label>
           <div className="image-inputs">
             <span>Product Photos</span>

@@ -11,6 +11,10 @@ function uploaded_files(string $field): array
 
     $files = $_FILES[$field];
     if (!is_array($files['name'])) {
+        if (($files['name'] ?? '') === '' || ($files['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return [];
+        }
+
         return [$files];
     }
 
@@ -116,6 +120,8 @@ if (method_is('GET')) {
         respond(['categories' => PRODUCT_CATEGORIES]);
     }
 
+    ensure_product_banner_columns();
+
     if (isset($_GET['id'])) {
         $stmt = pdo()->prepare('SELECT * FROM products WHERE id = ? AND active = 1');
         $stmt->execute([(int) $_GET['id']]);
@@ -201,10 +207,14 @@ if (!in_array($category, PRODUCT_CATEGORIES, true)) {
 }
 
 ensure_variant_image_columns();
+ensure_product_banner_columns();
 $variants = product_variant_payload($_POST);
 $variantImageFiles = uploaded_file_map('variant_images');
+$bannerFile = uploaded_files('banner_image')[0] ?? null;
 $price = (float) $variants[0]['price'];
 $stock = array_sum(array_map(static fn(array $variant): int => (int) $variant['stock'], $variants));
+$description = trim((string) ($_POST['description'] ?? ''));
+$productBenefits = trim((string) ($_POST['product_benefits'] ?? ''));
 if ($price <= 0) {
     fail('Price must be greater than zero.', 422);
 }
@@ -216,21 +226,45 @@ $db = pdo();
 $db->beginTransaction();
 
 try {
+    $bannerUrl = null;
+    $bannerPublicId = null;
+
     if ($action === 'update') {
         $productId = (int) ($_POST['id'] ?? 0);
         if ($productId <= 0) {
             fail('Product id is required.', 422);
         }
 
+        $productLookup = $db->prepare('SELECT banner_image_url, banner_image_public_id FROM products WHERE id = ?');
+        $productLookup->execute([$productId]);
+        $existingProduct = $productLookup->fetch();
+        if (!$existingProduct) {
+            fail('Product not found.', 404);
+        }
+
+        $bannerUrl = $existingProduct['banner_image_url'] ?: null;
+        $bannerPublicId = $existingProduct['banner_image_public_id'] ?: null;
+    }
+
+    if ($bannerFile) {
+        $uploadedBanner = upload_product_image($bannerFile);
+        $bannerUrl = $uploadedBanner['url'];
+        $bannerPublicId = $uploadedBanner['public_id'];
+    }
+
+    if ($action === 'update') {
         $update = $db->prepare(
             'UPDATE products
-             SET name = ?, category = ?, description = ?, price = ?, stock = ?, active = 1
+             SET name = ?, category = ?, description = ?, product_benefits = ?, banner_image_url = ?, banner_image_public_id = ?, price = ?, stock = ?, active = 1
              WHERE id = ?'
         );
         $update->execute([
             trim((string) $_POST['name']),
             $category,
-            trim((string) ($_POST['description'] ?? '')),
+            $description,
+            $productBenefits,
+            $bannerUrl,
+            $bannerPublicId,
             $price,
             $stock,
             $productId,
@@ -245,12 +279,15 @@ try {
         }
     } else {
         $insert = $db->prepare(
-            'INSERT INTO products (name, category, description, price, stock, active) VALUES (?, ?, ?, ?, ?, 1)'
+            'INSERT INTO products (name, category, description, product_benefits, banner_image_url, banner_image_public_id, price, stock, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)'
         );
         $insert->execute([
             trim((string) $_POST['name']),
             $category,
-            trim((string) ($_POST['description'] ?? '')),
+            $description,
+            $productBenefits,
+            $bannerUrl,
+            $bannerPublicId,
             $price,
             $stock,
         ]);

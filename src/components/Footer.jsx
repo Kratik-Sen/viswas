@@ -7,7 +7,7 @@ export default function Footer() {
         {/* Brand Column */}
         <div className="footer-brand">
           <div className="footer-brand-logo">
-            <img className="footer-logo-img" src="images/logo.png" alt="Vishwash Foods" />
+            <img className="footer-logo-img" src="images/footer.jpeg" alt="Vishwash Foods" />
             <strong>Vishwash Foods</strong>
           </div>
           <p>

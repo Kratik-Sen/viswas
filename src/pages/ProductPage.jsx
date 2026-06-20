@@ -27,9 +27,31 @@ function unitPriceLabel(variant) {
   return `${money(price / liters)}/L`;
 }
 
-function shortDescription(product) {
+function productDescription(product) {
   if (product?.description) return product.description;
   return "Pure Wood pressed/Cold pressed oil for everyday Indian cooking.";
+}
+
+function productBenefitsText(product) {
+  if (product?.product_benefits) return product.product_benefits;
+  if (product?.description) return product.description;
+  return [
+    "Wood pressed/Cold pressed for natural aroma and nutrients.",
+    "Packed fresh with live stock tracking.",
+    "Best suited for daily Indian cooking.",
+  ].join("\n");
+}
+
+function productBenefitPoints(product) {
+  return productBenefitsText(product)
+    .split(/\r?\n/)
+    .flatMap((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return [];
+      return trimmed.includes("\u2022") ? trimmed.split(/\s*\u2022\s*/) : [trimmed];
+    })
+    .map((line) => line.replace(/^[\u2022*-]\s*/, "").trim())
+    .filter(Boolean);
 }
 
 export default function ProductPage({ route, products, addToCart, showToast }) {
@@ -37,7 +59,8 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
   const product = products.find((item) => Number(item.id) === productId);
   const images = useMemo(() => (product ? productImages(product) : []), [product]);
   const variants = useMemo(() => productVariants(product), [product]);
-  const [imageIndex, setImageIndex] = useState(0);
+  const benefitItems = useMemo(() => (product ? productBenefitPoints(product) : []), [product]);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
   const [variantId, setVariantId] = useState("");
   const [quantity, setQuantity] = useState(1);
 
@@ -45,14 +68,14 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
     variants.find((variant) => String(variant.id) === String(variantId)) || variants[0];
   const stock = Number(selectedVariant?.stock || 0);
   const outOfStock = stock <= 0;
-  const selectedImage = variantImage(selectedVariant) || images[imageIndex % Math.max(1, images.length)]?.url;
+  const selectedImage = selectedImageUrl || variantImage(selectedVariant) || images[0]?.url;
   const selectedPrice = money(selectedVariant?.price || product?.price || 0);
 
   useEffect(() => {
-    setImageIndex(0);
     setVariantId(variants[0]?.id || "");
+    setSelectedImageUrl(variantImage(variants[0]) || images[0]?.url || "");
     setQuantity(1);
-  }, [product?.id, variants]);
+  }, [product?.id, images, variants]);
 
   useEffect(() => {
     if (outOfStock) {
@@ -87,11 +110,16 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
     window.location.hash = "#/cart";
   }
 
+  function selectVariant(variant) {
+    setVariantId(variant.id || "");
+    setSelectedImageUrl(variantImage(variant) || images[0]?.url || "");
+  }
+
   async function shareProduct() {
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: product.name, text: shortDescription(product), url });
+        await navigator.share({ title: product.name, text: productDescription(product), url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -112,10 +140,10 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
             <div className="product-thumbs" aria-label={`${product.name} images`}>
               {images.map((image, index) => (
                 <button
-                  className={index === imageIndex ? "selected" : ""}
+                  className={image.url === selectedImage ? "selected" : ""}
                   type="button"
                   key={image.id || image.url}
-                  onClick={() => setImageIndex(index)}
+                  onClick={() => setSelectedImageUrl(image.url)}
                   aria-label={`View product image ${index + 1}`}
                 >
                   <img src={image.url} alt="" aria-hidden="true" />
@@ -141,7 +169,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
             </button>
           </div>
 
-          <p className="product-teaser">{shortDescription(product)}</p>
+          <p className="product-teaser">{productDescription(product)}</p>
 
           <div className="product-review-line">
             <span aria-hidden="true">★</span>
@@ -176,7 +204,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
                     type="button"
                     disabled={unavailable}
                     key={variant.id || variant.size_label}
-                    onClick={() => setVariantId(variant.id || "")}
+                    onClick={() => selectVariant(variant)}
                   >
                     <span>{variant.size_label}</span>
                     <strong>{money(variant.price)}</strong>
@@ -239,11 +267,10 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
 
           <section className="detail-section product-description">
             <h2>Product Description</h2>
-            <p>{shortDescription(product)}</p>
             <ul>
-              <li>Wood pressed/Cold pressed for natural aroma and nutrients.</li>
-              <li>Packed fresh with live stock tracking.</li>
-              <li>Best suited for daily Indian cooking.</li>
+              {benefitItems.map((item, index) => (
+                <li key={`${item}-${index}`}>{item}</li>
+              ))}
             </ul>
           </section>
         </div>
