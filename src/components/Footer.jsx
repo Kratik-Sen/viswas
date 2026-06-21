@@ -16,7 +16,7 @@ export default function Footer() {
           </p>
           <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
             <span style={{ padding: "5px 11px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", fontSize: "0.72rem", color: "rgba(255,255,255,0.6)" }}>
-              🌿 Wood pressed/Cold pressed
+              🌿 Wood pressed/Cold pressed Oil
             </span>
             <span style={{ padding: "5px 11px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", fontSize: "0.72rem", color: "rgba(255,255,255,0.6)" }}>
               ✓ Lab Tested
@@ -84,6 +84,7 @@ export default function Footer() {
           <a href="#/contact">Contact</a>
         </nav>
       </div>
+  <div className="created-by">Created by NovarsisTech</div>
     </footer>
   );
 }
