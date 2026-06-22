@@ -471,6 +471,10 @@ function ensure_variant_image_columns(): void
         return;
     }
 
+    if (!table_column_exists('product_variants', 'discount_price')) {
+        pdo()->exec('ALTER TABLE product_variants ADD COLUMN discount_price DECIMAL(10,2) NULL AFTER price');
+    }
+
     if (!table_column_exists('product_variants', 'image_url')) {
         pdo()->exec('ALTER TABLE product_variants ADD COLUMN image_url TEXT NULL AFTER stock');
     }
@@ -509,7 +513,7 @@ function product_variants(int $productId): array
     ensure_variant_image_columns();
 
     $stmt = pdo()->prepare(
-        'SELECT id, product_id, size_label, price, stock, image_url, image_public_id, active
+        'SELECT id, product_id, size_label, price, discount_price, stock, image_url, image_public_id, active
          FROM product_variants
          WHERE product_id = ? AND active = 1
          ORDER BY id ASC'
@@ -521,6 +525,10 @@ function product_variants(int $productId): array
         $variant['id'] = (int) $variant['id'];
         $variant['product_id'] = (int) $variant['product_id'];
         $variant['price'] = (float) $variant['price'];
+        $discountPrice = $variant['discount_price'] !== null ? (float) $variant['discount_price'] : null;
+        $variant['discount_price'] = $discountPrice !== null && $discountPrice > 0 && $discountPrice < $variant['price']
+            ? $discountPrice
+            : null;
         $variant['stock'] = (int) $variant['stock'];
         $variant['active'] = (int) $variant['active'] === 1;
         $variant['image_url'] = $variant['image_url'] ?: null;

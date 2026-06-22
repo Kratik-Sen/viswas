@@ -39,6 +39,10 @@ $columnCheck->execute(['product_variants', 'image_url']);
 if ((int) $columnCheck->fetchColumn() === 0) {
     $db->exec('ALTER TABLE product_variants ADD COLUMN image_url TEXT NULL AFTER stock');
 }
+$columnCheck->execute(['product_variants', 'discount_price']);
+if ((int) $columnCheck->fetchColumn() === 0) {
+    $db->exec('ALTER TABLE product_variants ADD COLUMN discount_price DECIMAL(10,2) NULL AFTER price');
+}
 $columnCheck->execute(['product_variants', 'image_public_id']);
 if ((int) $columnCheck->fetchColumn() === 0) {
     $db->exec('ALTER TABLE product_variants ADD COLUMN image_public_id VARCHAR(255) NULL AFTER image_url');
@@ -97,15 +101,15 @@ if ($count === 0) {
         'INSERT INTO products (name, category, description, price, stock, active) VALUES (?, ?, ?, ?, ?, 1)'
     );
     $imageInsert = $db->prepare('INSERT INTO product_images (product_id, url, public_id) VALUES (?, ?, ?)');
-    $variantInsert = $db->prepare('INSERT INTO product_variants (product_id, size_label, price, stock, image_url, image_public_id, active) VALUES (?, ?, ?, ?, ?, ?, 1)');
+    $variantInsert = $db->prepare('INSERT INTO product_variants (product_id, size_label, price, discount_price, stock, image_url, image_public_id, active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)');
 
     foreach ($samples as $sample) {
         $productInsert->execute([$sample[0], $sample[1], $sample[2], $sample[3], $sample[4]]);
         $productId = (int) $db->lastInsertId();
         $imageInsert->execute([$productId, $sample[5], 'seed']);
-        $variantInsert->execute([$productId, '200ml', round((float) $sample[3] * 0.28, 2), max(1, (int) floor((int) $sample[4] / 3)), $sample[5], 'seed']);
-        $variantInsert->execute([$productId, '500ml', round((float) $sample[3] * 0.58, 2), max(1, (int) floor((int) $sample[4] / 3)), $sample[5], 'seed']);
-        $variantInsert->execute([$productId, '1L', (float) $sample[3], max(1, (int) ceil((int) $sample[4] / 3)), $sample[5], 'seed']);
+        $variantInsert->execute([$productId, '200ml', round((float) $sample[3] * 0.28, 2), null, max(1, (int) floor((int) $sample[4] / 3)), $sample[5], 'seed']);
+        $variantInsert->execute([$productId, '500ml', round((float) $sample[3] * 0.58, 2), null, max(1, (int) floor((int) $sample[4] / 3)), $sample[5], 'seed']);
+        $variantInsert->execute([$productId, '1L', (float) $sample[3], null, max(1, (int) ceil((int) $sample[4] / 3)), $sample[5], 'seed']);
     }
 } else {
     $seedImageUpdate = $db->prepare(

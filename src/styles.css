@@ -1080,6 +1080,24 @@ h1, h2, h3, h4 {
   color: var(--green);
 }
 
+.price-pair {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.price-pair del,
+.product-price-values del,
+.variant-card-price del,
+.card-variant-options small del,
+.cart-price-line del,
+.inventory-price del {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .product-meta span {
   font-size: 0.8rem;
   font-weight: 500;
@@ -1166,6 +1184,13 @@ h1, h2, h3, h4 {
   color: var(--green);
   font-size: 0.72rem;
   font-weight: 800;
+}
+
+.card-variant-options small.discounted {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  flex-wrap: wrap;
 }
 
 .product-actions {
@@ -1350,6 +1375,14 @@ h1, h2, h3, h4 {
   margin: -10px 0 18px;
 }
 
+.product-price-values {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .product-price-row strong {
   font-family: var(--font-body);
   font-size: clamp(2.3rem, 5vw, 3.5rem);
@@ -1471,6 +1504,13 @@ h1, h2, h3, h4 {
   padding: 10px 10px 0;
   font-size: 1rem;
   font-weight: 900;
+}
+
+.variant-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .variant-card small {
@@ -1867,6 +1907,13 @@ h1, h2, h3, h4 {
   font-size: 0.82rem;
 }
 
+.cart-price-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .cart-info {
   min-width: 0;
 }
@@ -2114,7 +2161,7 @@ h1, h2, h3, h4 {
 
 .variant-row {
   display: grid;
-  grid-template-columns: minmax(96px, 0.85fr) minmax(90px, 0.65fr) minmax(86px, 0.55fr) minmax(168px, 1fr) auto;
+  grid-template-columns: minmax(96px, 0.8fr) minmax(98px, 0.65fr) minmax(118px, 0.75fr) minmax(86px, 0.55fr) minmax(168px, 1fr) auto;
   gap: 10px;
   align-items: end;
   padding: 14px;
@@ -2252,7 +2299,7 @@ h1, h2, h3, h4 {
 
 .inventory-row {
   display: grid;
-  grid-template-columns: 82px minmax(220px, 1fr) minmax(130px, 0.7fr) minmax(90px, 0.35fr) minmax(120px, 0.45fr);
+  grid-template-columns: 82px minmax(220px, 1fr) minmax(130px, 0.7fr) minmax(112px, 0.45fr) minmax(120px, 0.45fr);
   grid-template-areas:
     "thumb name category price stock"
     ". variants variants actions actions";
@@ -2304,6 +2351,13 @@ h1, h2, h3, h4 {
   font-family: var(--font-heading);
   font-size: 1.05rem;
   color: var(--green);
+}
+
+.inventory-price {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
 }
 
 .inventory-row > em {

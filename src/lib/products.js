@@ -25,3 +25,27 @@ export function productImages(product) {
 
   return images.map((image) => ({ ...image, url: publicAssetUrl(image.url) }));
 }
+
+export function variantOriginalPrice(variant, fallback = 0) {
+  const price = Number(variant?.price ?? fallback ?? 0);
+  return Number.isFinite(price) ? price : 0;
+}
+
+export function variantDiscountPrice(variant) {
+  const originalPrice = variantOriginalPrice(variant);
+  const discountPrice = Number(variant?.discount_price ?? 0);
+
+  if (!Number.isFinite(discountPrice) || discountPrice <= 0 || discountPrice >= originalPrice) {
+    return null;
+  }
+
+  return discountPrice;
+}
+
+export function variantSalePrice(variant, fallback = 0) {
+  return variantDiscountPrice(variant) ?? variantOriginalPrice(variant, fallback);
+}
+
+export function hasVariantDiscount(variant) {
+  return variantDiscountPrice(variant) !== null;
+}

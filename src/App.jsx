@@ -13,7 +13,7 @@ import ProductPage from "./pages/ProductPage.jsx";
 import PrivacyPage from "./pages/PrivacyPage.jsx";
 import { api } from "./lib/api.js";
 import { CATEGORIES, CART_KEY } from "./lib/constants.js";
-import { productImage } from "./lib/products.js";
+import { productImage, variantSalePrice } from "./lib/products.js";
 import { getRoute } from "./lib/routing.js";
 
 export default function App() {
@@ -85,8 +85,10 @@ export default function App() {
       id: "",
       size_label: "Default",
       price: product.price,
+      discount_price: product.discount_price ?? null,
       stock: product.stock,
     };
+    const salePrice = variantSalePrice(selectedVariant, product.price);
     const stock = Math.max(0, Number(selectedVariant.stock || 0));
     const parsedQty = Math.floor(Number(quantity || 1));
     const requestedQty = Number.isFinite(parsedQty) ? Math.max(1, parsedQty) : 1;
@@ -108,7 +110,9 @@ export default function App() {
             ...item,
             quantity: nextQty,
             stock,
-            price: selectedVariant.price,
+            price: salePrice,
+            original_price: selectedVariant.price,
+            discount_price: selectedVariant.discount_price ?? null,
             size_label: selectedVariant.size_label,
           };
         });
@@ -122,7 +126,9 @@ export default function App() {
           size_label: selectedVariant.size_label,
           name: product.name,
           category: product.category,
-          price: selectedVariant.price,
+          price: salePrice,
+          original_price: selectedVariant.price,
+          discount_price: selectedVariant.discount_price ?? null,
           stock,
           quantity: qty,
           image: productImage(product, selectedVariant),
@@ -149,7 +155,9 @@ export default function App() {
             ...item,
             cart_key: key,
             stock,
-            price: liveVariant?.price ?? liveProduct?.price ?? item.price,
+            price: liveVariant ? variantSalePrice(liveVariant, liveProduct?.price) : (liveProduct?.price ?? item.price),
+            original_price: liveVariant?.price ?? liveProduct?.price ?? item.original_price,
+            discount_price: liveVariant?.discount_price ?? liveProduct?.discount_price ?? item.discount_price ?? null,
             size_label: liveVariant?.size_label ?? item.size_label,
             quantity: Math.min(requestedQuantity, stock),
           };
@@ -173,8 +181,10 @@ export default function App() {
             id: item.variant_id || "",
             size_label: item.size_label || "Default",
             price: item.price,
+            discount_price: item.discount_price ?? null,
             stock: item.stock,
           };
+        const salePrice = variantSalePrice(liveVariant, liveProduct.price);
         return {
           ...item,
           cart_key: item.cart_key || `${item.product_id}:${liveVariant.id || ""}`,
@@ -182,7 +192,9 @@ export default function App() {
           size_label: liveVariant.size_label || item.size_label,
           name: liveProduct.name,
           category: liveProduct.category,
-          price: liveVariant.price,
+          price: salePrice,
+          original_price: liveVariant.price,
+          discount_price: liveVariant.discount_price ?? null,
           stock: liveVariant.stock,
           image: productImage(liveProduct, liveVariant),
         };

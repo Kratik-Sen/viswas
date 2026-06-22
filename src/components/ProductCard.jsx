@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { publicAssetUrl } from "../lib/api.js";
 import { money } from "../lib/format.js";
-import { productImage } from "../lib/products.js";
+import { hasVariantDiscount, productImage, variantSalePrice } from "../lib/products.js";
 import { productHref } from "../lib/routing.js";
 import { blockNumberInput, DIGITS_PATTERN } from "../lib/validation.js";
 
@@ -22,10 +22,12 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
 
   const variants = product.variants?.length
     ? product.variants
-    : [{ id: "", size_label: "Default", price: product.price, stock: product.stock }];
+    : [{ id: "", size_label: "Default", price: product.price, discount_price: product.discount_price, stock: product.stock }];
 
   const selectedVariant =
     variants.find((v) => String(v.id) === String(variantId)) || variants[0];
+  const selectedSalePrice = variantSalePrice(selectedVariant, product.price);
+  const selectedHasDiscount = hasVariantDiscount(selectedVariant);
   const image = productImage(product, selectedVariant);
   const hoverImage = PRODUCT_HOVER_IMAGE;
   const out = Number(selectedVariant.stock) <= 0;
@@ -110,7 +112,10 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
 
         <div>
           <div className="product-meta">
-            <strong>{money(selectedVariant.price)}</strong>
+            <div className="price-pair">
+              <strong>{money(selectedSalePrice)}</strong>
+              {selectedHasDiscount && <del>{money(selectedVariant.price)}</del>}
+            </div>
             <span>
               {out
                 ? "Out of stock"
@@ -136,7 +141,10 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
                       onClick={() => setVariantId(v.id || "")}
                     >
                       <strong>{v.size_label}</strong>
-                      <small>{money(v.price)}</small>
+                      <small className={hasVariantDiscount(v) ? "discounted" : ""}>
+                        <span>{money(variantSalePrice(v))}</span>
+                        {hasVariantDiscount(v) && <del>{money(v.price)}</del>}
+                      </small>
                     </button>
                   );
                 })}
@@ -153,7 +161,7 @@ export default function ProductCard({ product, addToCart, showVariantButtons = f
             >
               {variants.map((v) => (
                 <option key={v.id || v.size_label} value={v.id}>
-                  {v.size_label} — {money(v.price)}
+                  {v.size_label} - {money(variantSalePrice(v))}{hasVariantDiscount(v) ? ` (MRP ${money(v.price)})` : ""}
                 </option>
               ))}
             </select>

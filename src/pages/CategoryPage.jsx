@@ -3,6 +3,7 @@ import CategoryLogoStrip from "../components/CategoryLogoStrip.jsx";
 import ProductGrid from "../components/ProductGrid.jsx";
 import { publicAssetUrl } from "../lib/api.js";
 import { money } from "../lib/format.js";
+import { variantSalePrice } from "../lib/products.js";
 import { categoryFromSlug, slugify } from "../lib/routing.js";
 
 function categoryImage(category) {
@@ -30,7 +31,7 @@ function categorySizes(products) {
     (product.variants || []).forEach((variant) => {
       const key = variant.size_label || "Default";
       const previous = sizes.get(key);
-      const price = Number(variant.price || 0);
+      const price = Number(variantSalePrice(variant) || 0);
 
       if (!previous || price < previous.price) {
         sizes.set(key, { label: key, price });
@@ -45,17 +46,28 @@ function variantProductCards(products) {
   return products.flatMap((product) => {
     const variants = product.variants?.length
       ? product.variants
-      : [{ id: "", size_label: "Default", price: product.price, stock: product.stock }];
+      : [{ id: "", size_label: "Default", price: product.price, discount_price: product.discount_price, stock: product.stock }];
 
     return variants.map((variant) => ({
       ...product,
       display_key: `${product.id}:${variant.id || variant.size_label}`,
       display_name: `${product.name} - ${variant.size_label}`,
-      price: variant.price,
+      price: variantSalePrice(variant),
+      original_price: variant.price,
+      discount_price: variant.discount_price ?? null,
       stock: variant.stock,
       variants: [variant],
     }));
   });
+}
+
+function productSortPrice(product) {
+  const variants = product.variants?.length
+    ? product.variants
+    : [{ price: product.price, discount_price: product.discount_price }];
+  const prices = variants.map((variant) => variantSalePrice(variant, product.price)).filter((price) => price > 0);
+
+  return prices.length ? Math.min(...prices) : 0;
 }
 
 export default function CategoryPage({ route, products, categories, addToCart }) {
@@ -80,8 +92,8 @@ export default function CategoryPage({ route, products, categories, addToCart })
     });
 
     return filtered.sort((a, b) => {
-      if (sort === "price-low") return Number(a.price) - Number(b.price);
-      if (sort === "price-high") return Number(b.price) - Number(a.price);
+      if (sort === "price-low") return productSortPrice(a) - productSortPrice(b);
+      if (sort === "price-high") return productSortPrice(b) - productSortPrice(a);
       if (sort === "stock") return Number(b.stock) - Number(a.stock);
       return Number(b.id) - Number(a.id);
     });

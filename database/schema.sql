@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
   product_id INT NOT NULL,
   size_label VARCHAR(60) NOT NULL,
   price DECIMAL(10,2) NOT NULL,
+  discount_price DECIMAL(10,2) NULL,
   stock INT NOT NULL DEFAULT 0,
   image_url TEXT NULL,
   image_public_id VARCHAR(255) NULL,

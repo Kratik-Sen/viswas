@@ -11,6 +11,16 @@ if (!method_is('POST')) {
     fail('Method not allowed.', 405);
 }
 
+function effective_variant_price(array $variant): float
+{
+    $price = (float) ($variant['price'] ?? 0);
+    $discountPrice = isset($variant['discount_price']) && $variant['discount_price'] !== null
+        ? (float) $variant['discount_price']
+        : 0.0;
+
+    return $discountPrice > 0 && $discountPrice < $price ? $discountPrice : $price;
+}
+
 function collect_order_items(array $items): array
 {
     $db = pdo();
@@ -57,7 +67,7 @@ function collect_order_items(array $items): array
             $imageStmt->execute([$productId]);
             $image = $imageStmt->fetchColumn() ?: null;
         }
-        $total += (float) $variant['price'] * $quantity;
+        $total += effective_variant_price($variant) * $quantity;
         $orderItems[] = [
             'product' => $product,
             'variant' => $variant,
@@ -111,7 +121,7 @@ function create_local_order(array $user, array $orderItems, float $total, string
             $product['name'],
             $variant['size_label'],
             $product['category'],
-            (float) $variant['price'],
+            effective_variant_price($variant),
             (int) $orderItem['quantity'],
             $orderItem['image_url'],
         ]);

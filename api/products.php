@@ -84,9 +84,10 @@ function product_variant_payload(array $post): array
 
         $size = trim((string) ($variant['size'] ?? ''));
         $price = trim((string) ($variant['price'] ?? ''));
+        $discountPrice = trim((string) ($variant['discount_price'] ?? ''));
         $stock = trim((string) ($variant['stock'] ?? ''));
 
-        if ($size === '' && $price === '' && $stock === '') {
+        if ($size === '' && $price === '' && $discountPrice === '' && $stock === '') {
             continue;
         }
         if ($size === '' || !preg_match("/^[A-Za-z0-9 .,'()\/#&+\-]+$/", $size)) {
@@ -95,15 +96,31 @@ function product_variant_payload(array $post): array
         if (!preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $price)) {
             fail('Each size price must contain numbers only, with up to two decimals.', 422);
         }
+        if ($discountPrice !== '' && !preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $discountPrice)) {
+            fail('Each discount price must contain numbers only, with up to two decimals.', 422);
+        }
         if (!preg_match('/^[0-9]+$/', $stock)) {
             fail('Each size quantity must contain numbers only.', 422);
+        }
+
+        $priceValue = (float) $price;
+        $discountPriceValue = $discountPrice === '' ? null : (float) $discountPrice;
+        if ($priceValue <= 0) {
+            fail('Each size price must be greater than zero.', 422);
+        }
+        if ($discountPriceValue !== null && $discountPriceValue <= 0) {
+            fail('Discount price must be greater than zero.', 422);
+        }
+        if ($discountPriceValue !== null && $discountPriceValue >= $priceValue) {
+            fail('Discount price must be lower than the original price.', 422);
         }
 
         $variants[] = [
             'key' => (string) $key,
             'existing_id' => ctype_digit((string) $key) ? (int) $key : null,
             'size' => $size,
-            'price' => (float) $price,
+            'price' => $priceValue,
+            'discount_price' => $discountPriceValue,
             'stock' => (int) $stock,
         ];
     }
@@ -320,7 +337,7 @@ try {
     $deleteVariants->execute([$productId]);
 
     $variantInsert = $db->prepare(
-        'INSERT INTO product_variants (product_id, size_label, price, stock, image_url, image_public_id, active) VALUES (?, ?, ?, ?, ?, ?, 1)'
+        'INSERT INTO product_variants (product_id, size_label, price, discount_price, stock, image_url, image_public_id, active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)'
     );
     foreach ($variants as $variant) {
         $imageUrl = null;
@@ -346,6 +363,7 @@ try {
             $productId,
             $variant['size'],
             $variant['price'],
+            $variant['discount_price'],
             $variant['stock'],
             $imageUrl,
             $imagePublicId,

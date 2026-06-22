@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { money } from "../lib/format.js";
-import { productImages, variantImage } from "../lib/products.js";
+import { hasVariantDiscount, productImages, variantImage, variantSalePrice } from "../lib/products.js";
 import { productIdFromParam } from "../lib/routing.js";
 import { blockNumberInput, DIGITS_PATTERN } from "../lib/validation.js";
 
 function productVariants(product) {
   return product?.variants?.length
     ? product.variants
-    : [{ id: "", size_label: "Default", price: product?.price, stock: product?.stock }];
+    : [{ id: "", size_label: "Default", price: product?.price, discount_price: product?.discount_price, stock: product?.stock }];
 }
 
 function clampQuantity(value, stock) {
@@ -18,7 +18,7 @@ function clampQuantity(value, stock) {
 
 function unitPriceLabel(variant) {
   const label = String(variant.size_label || "").toLowerCase();
-  const price = Number(variant.price || 0);
+  const price = Number(variantSalePrice(variant) || 0);
   const mlMatch = label.match(/(\d+(?:\.\d+)?)\s*ml\b/);
   const literMatch = label.match(/(\d+(?:\.\d+)?)\s*(?:l|ltr|liter|litre)\b/);
   const liters = mlMatch ? Number(mlMatch[1]) / 1000 : literMatch ? Number(literMatch[1]) : 0;
@@ -69,7 +69,9 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
   const stock = Number(selectedVariant?.stock || 0);
   const outOfStock = stock <= 0;
   const selectedImage = selectedImageUrl || variantImage(selectedVariant) || images[0]?.url;
-  const selectedPrice = money(selectedVariant?.price || product?.price || 0);
+  const selectedSalePrice = variantSalePrice(selectedVariant, product?.price);
+  const selectedPrice = money(selectedSalePrice);
+  const selectedHasDiscount = hasVariantDiscount(selectedVariant);
 
   useEffect(() => {
     setVariantId(variants[0]?.id || "");
@@ -178,8 +180,11 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
           </div>
 
           <div className="product-price-row">
-            <strong>{selectedPrice}</strong>
-            <span>MRP incl. all taxes</span>
+            <div className="product-price-values">
+              <strong>{selectedPrice}</strong>
+              {selectedHasDiscount && <del>{money(selectedVariant.price)}</del>}
+            </div>
+            <span>{selectedHasDiscount ? "Discounted price incl. all taxes" : "MRP incl. all taxes"}</span>
           </div>
 
           <div className="product-coin-banner">
@@ -188,7 +193,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
 
           <div className="product-best-price">
             <strong>Best Price {selectedPrice}</strong>
-            <span>with coupon - Apply at checkout</span>
+            <span>{selectedHasDiscount ? "Discount already applied" : "with coupon - Apply at checkout"}</span>
           </div>
 
           <section className="detail-section">
@@ -207,7 +212,10 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
                     onClick={() => selectVariant(variant)}
                   >
                     <span>{variant.size_label}</span>
-                    <strong>{money(variant.price)}</strong>
+                    <strong className="variant-card-price">
+                      <span>{money(variantSalePrice(variant))}</span>
+                      {hasVariantDiscount(variant) && <del>{money(variant.price)}</del>}
+                    </strong>
                     <small>{unavailable ? "Out of stock" : unitPriceLabel(variant)}</small>
                   </button>
                 );

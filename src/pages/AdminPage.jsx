@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import OrderList from "../components/OrderList.jsx";
 import { api, publicAssetUrl } from "../lib/api.js";
 import { money } from "../lib/format.js";
-import { productImage, productImages } from "../lib/products.js";
+import { hasVariantDiscount, productImage, productImages, variantSalePrice } from "../lib/products.js";
 import { blockNumberInput, DECIMAL_PATTERN, DIGITS_PATTERN, isDecimal, isDigits, isTextValue, TEXT_PATTERN } from "../lib/validation.js";
 
 function rowKey() {
@@ -11,7 +11,7 @@ function rowKey() {
 
 export default function AdminPage({ user, products, categories, openAuth, showToast, loadProducts }) {
   const [imageSlots, setImageSlots] = useState([Date.now()]);
-  const [variantRows, setVariantRows] = useState([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
+  const [variantRows, setVariantRows] = useState([{ key: rowKey(), size: "1L", price: "", discountPrice: "", stock: "", imageUrl: "" }]);
   const [settings, setSettings] = useState(null);
   const [orders, setOrders] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -66,6 +66,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
     for (const row of variantRows) {
       const size = formData.get(`variants[${row.key}][size]`);
       const price = formData.get(`variants[${row.key}][price]`);
+      const discountPrice = String(formData.get(`variants[${row.key}][discount_price]`) || "").trim();
       const stock = formData.get(`variants[${row.key}][stock]`);
       if (!isTextValue(size)) {
         showToast("Each product size must use valid text.");
@@ -73,6 +74,22 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
       }
       if (!isDecimal(price)) {
         showToast("Each size price can contain numbers only, with up to two decimals.");
+        return;
+      }
+      if (Number(price) <= 0) {
+        showToast("Each size price must be greater than zero.");
+        return;
+      }
+      if (discountPrice && !isDecimal(discountPrice)) {
+        showToast("Each discount price can contain numbers only, with up to two decimals.");
+        return;
+      }
+      if (discountPrice && Number(discountPrice) <= 0) {
+        showToast("Discount price must be greater than zero.");
+        return;
+      }
+      if (discountPrice && Number(discountPrice) >= Number(price)) {
+        showToast("Discount price must be lower than the original price.");
         return;
       }
       if (!isDigits(stock)) {
@@ -95,7 +112,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
       showToast(data.message);
       form.reset();
       setImageSlots([Date.now()]);
-      setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
+      setVariantRows([{ key: rowKey(), size: "1L", price: "", discountPrice: "", stock: "", imageUrl: "" }]);
       setEditingProduct(null);
       await loadProducts();
     } catch (error) {
@@ -120,7 +137,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
       if (editingProduct?.id === product.id) {
         setEditingProduct(null);
         setImageSlots([Date.now()]);
-        setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
+        setVariantRows([{ key: rowKey(), size: "1L", price: "", discountPrice: "", stock: "", imageUrl: "" }]);
       }
       await loadProducts();
     } catch (error) {
@@ -158,10 +175,11 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
     setEditingProduct(product);
     setImageSlots([Date.now()]);
     setVariantRows(
-      (product.variants?.length ? product.variants : [{ size_label: "1L", price: product.price, stock: product.stock }]).map((variant) => ({
+      (product.variants?.length ? product.variants : [{ size_label: "1L", price: product.price, discount_price: product.discount_price, stock: product.stock }]).map((variant) => ({
         key: variant.id || rowKey(),
         size: variant.size_label || "1L",
         price: variant.price ?? "",
+        discountPrice: variant.discount_price ?? "",
         stock: variant.stock ?? "",
         imageUrl: variant.image_url || "",
       }))
@@ -173,7 +191,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
     setEditingProduct(null);
     formRef.current?.reset();
     setImageSlots([Date.now()]);
-    setVariantRows([{ key: rowKey(), size: "1L", price: "", stock: "", imageUrl: "" }]);
+    setVariantRows([{ key: rowKey(), size: "1L", price: "", discountPrice: "", stock: "", imageUrl: "" }]);
   }
 
   const totalStock = products.reduce((sum, p) => sum + Number(p.stock || 0), 0);
@@ -235,7 +253,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
             <input type="file" name="banner_image" accept="image/*" />
           </label>
           <div className="variant-inputs">
-            <span>Sizes, Prices and Bottle Images</span>
+            <span>Sizes, Prices, Discounts and Bottle Images</span>
             {variantRows.map((row) => (
               <div className="variant-row" key={row.key}>
                 <label>
@@ -243,7 +261,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                   <input name={`variants[${row.key}][size]`} pattern={TEXT_PATTERN} required defaultValue={row.size} placeholder="200ml" />
                 </label>
                 <label>
-                  Price (₹)
+                  Original price (₹)
                   <input
                     type="text"
                     inputMode="decimal"
@@ -253,6 +271,18 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
                     required
                     defaultValue={row.price}
                     placeholder="0.00"
+                  />
+                </label>
+                <label>
+                  Discount price (₹)
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern={DECIMAL_PATTERN}
+                    name={`variants[${row.key}][discount_price]`}
+                    onKeyDown={(event) => blockNumberInput(event, { decimal: true })}
+                    defaultValue={row.discountPrice}
+                    placeholder="Optional"
                   />
                 </label>
                 <label>
@@ -289,7 +319,7 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
             <button
               type="button"
               className="ghost-button"
-              onClick={() => setVariantRows((rows) => [...rows, { key: rowKey(), size: "", price: "", stock: "", imageUrl: "" }])}
+              onClick={() => setVariantRows((rows) => [...rows, { key: rowKey(), size: "", price: "", discountPrice: "", stock: "", imageUrl: "" }])}
             >
               + Add size variant
             </button>
@@ -408,22 +438,32 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
           {products.length === 0 ? (
             <div className="empty-state">No products yet. Add your first product above.</div>
           ) : (
-            products.map((product) => (
-              <div className="inventory-row" key={product.id}>
-                <img src={productImage(product)} alt={product.name} />
-                <span>{product.name}</span>
-                <small>{product.category}</small>
-                <strong>{money(product.price)}</strong>
-                <em>{product.stock} units</em>
-                <small className="variant-summary">
-                  {(product.variants || []).map((v) => `${v.size_label} ${money(v.price)}`).join(" · ")}
-                </small>
-                <div className="inventory-actions">
-                  <button className="edit-button" onClick={() => editProduct(product)}>Edit</button>
-                  <button className="danger-button" onClick={() => deleteProduct(product)}>Delete</button>
+            products.map((product) => {
+              const primaryVariant = product.variants?.[0] || product;
+              const primarySalePrice = variantSalePrice(primaryVariant, product.price);
+
+              return (
+                <div className="inventory-row" key={product.id}>
+                  <img src={productImage(product)} alt={product.name} />
+                  <span>{product.name}</span>
+                  <small>{product.category}</small>
+                  <strong className="inventory-price">
+                    <span>{money(primarySalePrice)}</span>
+                    {hasVariantDiscount(primaryVariant) && <del>{money(primaryVariant.price)}</del>}
+                  </strong>
+                  <em>{product.stock} units</em>
+                  <small className="variant-summary">
+                    {(product.variants || [])
+                      .map((v) => `${v.size_label} ${money(variantSalePrice(v))}${hasVariantDiscount(v) ? ` (MRP ${money(v.price)})` : ""}`)
+                      .join(" · ")}
+                  </small>
+                  <div className="inventory-actions">
+                    <button className="edit-button" onClick={() => editProduct(product)}>Edit</button>
+                    <button className="danger-button" onClick={() => deleteProduct(product)}>Delete</button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>

@@ -44,6 +44,13 @@ function cartItems(cart) {
   }));
 }
 
+function cartHasDiscount(item) {
+  const originalPrice = Number(item.original_price || 0);
+  const price = Number(item.price || 0);
+
+  return originalPrice > 0 && price > 0 && originalPrice > price;
+}
+
 async function markPaymentAttempt(order, paymentStatus, reason = "") {
   if (!order?.order_id) return;
 
@@ -223,7 +230,10 @@ export default function CartPage({ cart, user, openAuth, updateCartQuantity, rem
                   <div className="cart-info">
                     <span className="pill">{item.category}</span>
                     <h3>{item.name}</h3>
-                    <p>{item.size_label ? `${item.size_label} - ` : ""}{money(item.price)} each</p>
+                    <p className="cart-price-line">
+                      <span>{item.size_label ? `${item.size_label} - ` : ""}{money(item.price)} each</span>
+                      {cartHasDiscount(item) && <del>{money(item.original_price)}</del>}
+                    </p>
                     <small className={outOfStock ? "cart-stock out" : "cart-stock"}>
                       {outOfStock ? "Out of stock" : `${stock} in stock`}
                     </small>
