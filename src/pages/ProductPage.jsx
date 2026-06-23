@@ -29,14 +29,14 @@ function unitPriceLabel(variant) {
 
 function productDescription(product) {
   if (product?.description) return product.description;
-  return "Pure Wood pressed/Cold pressed oil for everyday Indian cooking.";
+  return "Pure Wood Pressed/Cold Pressed oil for everyday Indian cooking.";
 }
 
 function productBenefitsText(product) {
   if (product?.product_benefits) return product.product_benefits;
   if (product?.description) return product.description;
   return [
-    "Wood pressed/Cold pressed for natural aroma and nutrients.",
+    "Wood Pressed/Cold Pressed for natural aroma and nutrients.",
     "Packed fresh with live stock tracking.",
     "Best suited for daily Indian cooking.",
   ].join("\n");

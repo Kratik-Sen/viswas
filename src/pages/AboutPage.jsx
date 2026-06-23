@@ -11,20 +11,20 @@ export default function AboutPage() {
 
         <p>
           We manufactur "Ghani Drop Oil" - 100% Natural Wood Pressed/Cold
-          pressed - Lakda Ghani oil by our Indian Tradition Method
+          Pressed - Lakda Ghani oil by our Indian Tradition Method
         </p>
         <p>GST No : 24AINPC6748C1ZE</p>
-        <p>Our wood pressed Ghani Drop Oil consists wide range of varities</p>
+        <p>Our wood Pressed Ghani Drop Oil consists wide range of varities</p>
         <ul>
-          <li>Wood pressed Ground nut oil</li>
-          <li>Wood pressed Coconut oil</li>
-          <li>Wood pressed Sunflower oil</li>
-          <li>Wood pressed Black Sesame oil</li>
-          <li>Wood pressed White Sesame oil</li>
-          <li>Wood pressed Black Mustard</li>
-          <li>Wood pressed Yellow Mustard</li>
-          <li>Wood pressed Almond oil</li>
-          <li>Wood pressed Flaxseed oil</li>
+          <li>Wood Pressed Ground nut oil</li>
+          <li>Wood Pressed Coconut oil</li>
+          <li>Wood Pressed Sunflower oil</li>
+          <li>Wood Pressed Black Sesame oil</li>
+          <li>Wood Pressed White Sesame oil</li>
+          <li>Wood Pressed Black Mustard</li>
+          <li>Wood Pressed Yellow Mustard</li>
+          <li>Wood Pressed Almond oil</li>
+          <li>Wood Pressed Flaxseed oil</li>
         </ul>
       </section>
 
@@ -104,7 +104,7 @@ export default function AboutPage() {
           </div>
           <strong>Purity Guaranteed</strong>
           <p>
-            All our oils are Wood pressed/Cold pressed with zero additives, no
+            All our oils are Wood Pressed/Cold Pressed with zero additives, no
             heat processing, and independently lab certified.
           </p>
         </div>
@@ -141,7 +141,7 @@ export default function AboutPage() {
                 fontSize: "0.95rem",
               }}
             >
-              Shop our full range of Wood pressed/Cold pressed oils and taste
+              Shop our full range of Wood Pressed/Cold Pressed oils and taste
               the Vishwash Foods difference.
             </p>
           </div>

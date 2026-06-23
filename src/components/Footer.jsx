@@ -11,12 +11,12 @@ export default function Footer() {
             <strong>Vishwash Foods</strong>
           </div>
           <p>
-            Bringing you the finest Wood pressed/Cold pressed oils, sourced directly from Indian farms.
+            Bringing you the finest Wood Pressed/Cold Pressed oils, sourced directly from Indian farms.
             Pure, natural, and full of goodness for your everyday cooking.
           </p>
           <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
             <span style={{ padding: "5px 11px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", fontSize: "0.72rem", color: "rgba(255,255,255,0.6)" }}>
-              🌿 Wood pressed/Cold pressed Oil
+              🌿 Wood Pressed/Cold Pressed Oil
             </span>
             <span style={{ padding: "5px 11px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", fontSize: "0.72rem", color: "rgba(255,255,255,0.6)" }}>
               ✓ Lab Tested
@@ -55,21 +55,21 @@ export default function Footer() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9a16 16 0 0 0 6.91 6.91l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
-              +91 99999 99999
+             +91 9106152801
             </div>
             <div className="footer-contact-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
               </svg>
-              care@vishwashfoods.in
+              vishwashfoods22@gmail.com
             </div>
             <div className="footer-contact-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              Main Market Road, India
+            C/117, Amit Nagar, VIP Road, Karelibaugh, Vadodara, Gujarat - 390018
             </div>
           </div>
         </div>

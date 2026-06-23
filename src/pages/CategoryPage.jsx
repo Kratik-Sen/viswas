@@ -143,7 +143,7 @@ export default function CategoryPage({ route, products, categories, addToCart })
       {selected && !bannerImage && (
         <section className="category-hero-banner">
           <div>
-            <p className="eyebrow">Wood pressed/Cold pressed</p>
+            <p className="eyebrow">Wood Pressed/Cold Pressed</p>
             <h2>{selected}</h2>
             <p>Explore every available size in this category and choose the bottle that fits your kitchen.</p>
             {sizes.length > 0 && (

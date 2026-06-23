@@ -42,7 +42,7 @@ export default function Nav({ route, user, cartCount, openAuth, logout }) {
       {/* Announcement Bar */}
       <div className="announcement-bar">
         <span>🌿 <strong>Free shipping</strong> on orders above ₹499</span>
-        <span>✦ <strong>100% Pure</strong> Wood pressed/Cold pressed Oils</span>
+        <span>✦ <strong>100% Pure</strong> Wood Pressed/Cold Pressed Oils</span>
         <span>🏠 Farm to Doorstep Delivery</span>
       </div>
 
@@ -53,7 +53,7 @@ export default function Nav({ route, user, cartCount, openAuth, logout }) {
             <img className="brand-logo" src="images/logo.png" alt="Vishwash Foods Logo" />
             <div className="brand-text">
               <strong>Vishwash Foods</strong>
-              <small>Wood pressed/Cold pressed <span className="nav-text"><b>Oil</b></span></small>
+              <small>Wood Pressed/Cold Pressed <span className="nav-text"><b>Oil</b></span></small>
             </div>
           </a>
 
@@ -115,7 +115,7 @@ export default function Nav({ route, user, cartCount, openAuth, logout }) {
             <img className="brand-logo" src="images/logo.png" alt="Vishwash Foods Logo" />
             <div className="brand-text">
               <strong>Vishwash Foods</strong>
-              <small>Wood pressed/Cold pressed &middot; Pure &middot; Natural</small>
+              <small>Wood Pressed/Cold Pressed &middot; Pure &middot; Natural</small>
             </div>
           </a>
           <button className="menu-close-button" type="button" aria-label="Close navigation" onClick={() => setOpen(false)}>
