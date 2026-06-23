@@ -187,9 +187,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
             <span>{selectedHasDiscount ? "Discounted price incl. all taxes" : "MRP incl. all taxes"}</span>
           </div>
 
-          <div className="product-coin-banner">
-            Buy now and earn purity coins instantly
-          </div>
+         
 
           <div className="product-best-price">
             <strong>Best Price {selectedPrice}</strong>
