@@ -282,7 +282,7 @@ export default function ProductPage({ route, products, categoryFaqs, addToCart, 
           </div>
 
           <section className="detail-section product-description">
-            <h2>Product Description</h2>
+            <h2>Product Benefits</h2>
             <ul>
               {benefitItems.map((item, index) => (
                 <li key={`${item}-${index}`}>{item}</li>
@@ -292,7 +292,7 @@ export default function ProductPage({ route, products, categoryFaqs, addToCart, 
 
           {faqs.length > 0 && (
             <section className="detail-section product-faq-section">
-              <h2>Questions & Answers</h2>
+              <h2>Frequently Asked Questions</h2>
               <div className="product-faq-list">
                 {faqs.map((faq, index) => {
                   const faqId = faq.id ?? `${faq.question}-${index}`;
