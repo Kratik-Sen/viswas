@@ -20,6 +20,7 @@ export default function App() {
   const [route, setRoute] = useState(getRoute);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(CATEGORIES);
+  const [categoryFaqs, setCategoryFaqs] = useState({});
   const [user, setUser] = useState(null);
   const [authMode, setAuthMode] = useState(null);
   const [authNotice, setAuthNotice] = useState("");
@@ -61,6 +62,7 @@ export default function App() {
     const data = await api("products.php");
     setProducts(data.products || []);
     setCategories(data.categories || CATEGORIES);
+    setCategoryFaqs(data.category_faqs || {});
     return data.products || [];
   }
 
@@ -206,6 +208,8 @@ export default function App() {
     route,
     products,
     categories,
+    categoryFaqs,
+    setCategoryFaqs,
     user,
     cart: hydratedCart,
     addToCart,

@@ -9,14 +9,30 @@ function rowKey() {
   return `${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }
 
-export default function AdminPage({ user, products, categories, openAuth, showToast, loadProducts }) {
+function faqRowsForCategory(categoryFaqs, category) {
+  const rows = categoryFaqs?.[category] || [];
+  if (!rows.length) {
+    return [{ key: rowKey(), question: "", answer: "" }];
+  }
+
+  return rows.map((faq) => ({
+    key: faq.id || rowKey(),
+    question: faq.question || "",
+    answer: faq.answer || "",
+  }));
+}
+
+export default function AdminPage({ user, products, categories, categoryFaqs, setCategoryFaqs, openAuth, showToast, loadProducts }) {
   const [imageSlots, setImageSlots] = useState([Date.now()]);
   const [variantRows, setVariantRows] = useState([{ key: rowKey(), size: "1L", price: "", discountPrice: "", stock: "", imageUrl: "" }]);
+  const [faqCategory, setFaqCategory] = useState(categories[0] || "");
+  const [faqRows, setFaqRows] = useState(() => faqRowsForCategory(categoryFaqs, categories[0]));
   const [settings, setSettings] = useState(null);
   const [orders, setOrders] = useState([]);
   const [messages, setMessages] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [faqBusy, setFaqBusy] = useState(false);
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +45,16 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
       .then((data) => setMessages(data.messages || []))
       .catch(() => {});
   }, [user]);
+
+  useEffect(() => {
+    if (!faqCategory && categories[0]) {
+      setFaqCategory(categories[0]);
+    }
+  }, [categories, faqCategory]);
+
+  useEffect(() => {
+    setFaqRows(faqRowsForCategory(categoryFaqs, faqCategory || categories[0]));
+  }, [categoryFaqs, faqCategory, categories]);
 
   if (!user) {
     return (
@@ -120,6 +146,54 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
     } finally {
       setBusy(false);
     }
+  }
+
+  async function submitFaqs(event) {
+    event.preventDefault();
+    if (!faqCategory) {
+      showToast("Choose a category for FAQs.");
+      return;
+    }
+
+    const filledRows = faqRows
+      .map((row) => ({
+        question: row.question.trim(),
+        answer: row.answer.trim(),
+      }))
+      .filter((row) => row.question || row.answer);
+
+    if (filledRows.some((row) => !row.question || !row.answer)) {
+      showToast("Each FAQ needs both a question and an answer.");
+      return;
+    }
+
+    setFaqBusy(true);
+    try {
+      const formData = new FormData();
+      formData.set("action", "save_faqs");
+      formData.set("category", faqCategory);
+      filledRows.forEach((row, index) => {
+        formData.set(`faqs[${index}][question]`, row.question);
+        formData.set(`faqs[${index}][answer]`, row.answer);
+      });
+
+      const data = await api("products.php", {
+        method: "POST",
+        body: formData,
+      });
+      setCategoryFaqs((current) => ({ ...current, [faqCategory]: data.faqs || [] }));
+      setFaqRows(faqRowsForCategory({ [faqCategory]: data.faqs || [] }, faqCategory));
+      showToast(data.message);
+      await loadProducts();
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      setFaqBusy(false);
+    }
+  }
+
+  function updateFaqRow(key, field, value) {
+    setFaqRows((rows) => rows.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
   }
 
   async function deleteProduct(product) {
@@ -375,6 +449,70 @@ export default function AdminPage({ user, products, categories, openAuth, showTo
         </form>
 
         <div style={{ display: "grid", gap: "18px", alignContent: "start" }}>
+          <form className="panel-form" onSubmit={submitFaqs}>
+            <h2>Category FAQs</h2>
+            <label>
+              Oil category
+              <select
+                value={faqCategory}
+                onChange={(event) => {
+                  const nextCategory = event.target.value;
+                  setFaqCategory(nextCategory);
+                  setFaqRows(faqRowsForCategory(categoryFaqs, nextCategory));
+                }}
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="faq-admin-rows">
+              {faqRows.map((row, index) => (
+                <div className="faq-admin-row" key={row.key}>
+                  <label>
+                    Question {index + 1}
+                    <input
+                      value={row.question}
+                      maxLength="255"
+                      onChange={(event) => updateFaqRow(row.key, "question", event.target.value)}
+                      placeholder="e.g. What makes this oil different?"
+                    />
+                  </label>
+                  <label>
+                    Answer
+                    <textarea
+                      rows="3"
+                      value={row.answer}
+                      maxLength="2000"
+                      onChange={(event) => updateFaqRow(row.key, "answer", event.target.value)}
+                      placeholder="Write the answer shown inside the dropdown..."
+                    />
+                  </label>
+                  {faqRows.length > 1 && (
+                    <button
+                      type="button"
+                      className="danger-button"
+                      onClick={() => setFaqRows((rows) => rows.filter((item) => item.key !== row.key))}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => setFaqRows((rows) => [...rows, { key: rowKey(), question: "", answer: "" }])}
+            >
+              + Add question
+            </button>
+            <button className="primary-button full" disabled={faqBusy}>
+              {faqBusy ? "Saving FAQs..." : "Save Category FAQs"}
+            </button>
+          </form>
           <div className="panel-form">
             <h2>💳 Payment Settings</h2>
 

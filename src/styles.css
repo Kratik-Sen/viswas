@@ -1664,6 +1664,80 @@ h1, h2, h3, h4 {
   padding-left: 18px;
 }
 
+.product-faq-section {
+  margin-top: 30px;
+}
+
+.product-faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.product-faq-item {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+}
+
+.product-faq-item.open {
+  border-color: var(--green);
+}
+
+.product-faq-question {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 24px;
+  border: 0;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.45;
+  transition: var(--transition);
+}
+
+.product-faq-question strong,
+.product-faq-answer strong {
+  color: #00604c;
+  font-weight: 900;
+}
+
+.product-faq-question em {
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.product-faq-item.open .product-faq-question {
+  background: #00604c;
+  color: #fff;
+}
+
+.product-faq-item.open .product-faq-question strong,
+.product-faq-item.open .product-faq-question em {
+  color: #fff;
+}
+
+.product-faq-answer {
+  padding: 20px 24px;
+  background: #fff;
+}
+
+.product-faq-answer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
 /* ============================================================
    PAGE WRAP / TITLE
    ============================================================ */
@@ -2213,6 +2287,20 @@ h1, h2, h3, h4 {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
+}
+
+.faq-admin-rows {
+  display: grid;
+  gap: 12px;
+}
+
+.faq-admin-row {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
 }
 
 .existing-images {
@@ -3389,6 +3477,11 @@ h1, h2, h3, h4 {
 
   .product-detail-head h1 {
     font-size: 1.85rem;
+  }
+
+  .product-faq-question,
+  .product-faq-answer {
+    padding-inline: 16px;
   }
 
   .detail-actions {

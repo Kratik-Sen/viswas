@@ -54,15 +54,24 @@ function productBenefitPoints(product) {
     .filter(Boolean);
 }
 
-export default function ProductPage({ route, products, addToCart, showToast }) {
+function productFaqs(product, categoryFaqs) {
+  if (!product) return [];
+  const categoryRows = categoryFaqs?.[product.category];
+  if (Array.isArray(categoryRows)) return categoryRows;
+  return Array.isArray(product.category_faqs) ? product.category_faqs : [];
+}
+
+export default function ProductPage({ route, products, categoryFaqs, addToCart, showToast }) {
   const productId = productIdFromParam(route.param);
   const product = products.find((item) => Number(item.id) === productId);
   const images = useMemo(() => (product ? productImages(product) : []), [product]);
   const variants = useMemo(() => productVariants(product), [product]);
   const benefitItems = useMemo(() => (product ? productBenefitPoints(product) : []), [product]);
+  const faqs = useMemo(() => productFaqs(product, categoryFaqs), [product, categoryFaqs]);
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
   const [variantId, setVariantId] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [openFaqId, setOpenFaqId] = useState(null);
 
   const selectedVariant =
     variants.find((variant) => String(variant.id) === String(variantId)) || variants[0];
@@ -77,6 +86,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
     setVariantId(variants[0]?.id || "");
     setSelectedImageUrl(variantImage(variants[0]) || images[0]?.url || "");
     setQuantity(1);
+    setOpenFaqId(null);
   }, [product?.id, images, variants]);
 
   useEffect(() => {
@@ -221,7 +231,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
             </div>
           </section>
 
-          <div className="app-offer-strip">
+          {/* <div className="app-offer-strip">
             <div>
               <span>APP</span>
               <small>PRE-SALE</small>
@@ -230,7 +240,7 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
               <strong>Get Flat 30% OFF exclusively on our app.</strong>
               <small>Use code: POP30</small>
             </p>
-          </div>
+          </div> */}
 
           <div className="detail-actions">
             <div className="quantity-stepper" aria-label="Quantity">
@@ -279,6 +289,41 @@ export default function ProductPage({ route, products, addToCart, showToast }) {
               ))}
             </ul>
           </section>
+
+          {faqs.length > 0 && (
+            <section className="detail-section product-faq-section">
+              <h2>Questions & Answers</h2>
+              <div className="product-faq-list">
+                {faqs.map((faq, index) => {
+                  const faqId = faq.id ?? `${faq.question}-${index}`;
+                  const isOpen = String(openFaqId) === String(faqId);
+
+                  return (
+                    <article className={isOpen ? "product-faq-item open" : "product-faq-item"} key={faqId}>
+                      <button
+                        type="button"
+                        className="product-faq-question"
+                        onClick={() => setOpenFaqId(isOpen ? null : faqId)}
+                        aria-expanded={isOpen}
+                      >
+                        <span>
+                          <strong>Q.</strong> {faq.question}
+                        </span>
+                        <em aria-hidden="true">{isOpen ? "-" : "+"}</em>
+                      </button>
+                      {isOpen && (
+                        <div className="product-faq-answer">
+                          <p>
+                            <strong>A.</strong> {faq.answer}
+                          </p>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </section>
     </main>

@@ -138,6 +138,7 @@ if (method_is('GET')) {
     }
 
     ensure_product_banner_columns();
+    ensure_category_faq_table();
 
     if (isset($_GET['id'])) {
         $stmt = pdo()->prepare('SELECT * FROM products WHERE id = ? AND active = 1');
@@ -166,7 +167,7 @@ if (method_is('GET')) {
     $stmt = pdo()->prepare($sql);
     $stmt->execute($params);
     $products = array_map('normalize_product', $stmt->fetchAll());
-    respond(['products' => $products, 'categories' => PRODUCT_CATEGORIES]);
+    respond(['products' => $products, 'categories' => PRODUCT_CATEGORIES, 'category_faqs' => category_faqs()]);
 }
 
 if (!method_is('POST')) {
@@ -210,6 +211,75 @@ if ($action === 'delete_image') {
     }
 
     respond(['message' => 'Product image removed.']);
+}
+
+if ($action === 'save_faqs') {
+    $category = trim((string) ($_POST['category'] ?? ''));
+    if (!in_array($category, PRODUCT_CATEGORIES, true)) {
+        fail('Invalid FAQ category.', 422);
+    }
+
+    ensure_category_faq_table();
+    $rawFaqs = $_POST['faqs'] ?? [];
+    if (!is_array($rawFaqs)) {
+        $rawFaqs = [];
+    }
+
+    $faqs = [];
+    foreach ($rawFaqs as $faq) {
+        if (!is_array($faq)) {
+            continue;
+        }
+
+        $question = trim((string) ($faq['question'] ?? ''));
+        $answer = trim((string) ($faq['answer'] ?? ''));
+
+        if ($question === '' && $answer === '') {
+            continue;
+        }
+        if ($question === '' || $answer === '') {
+            fail('Each FAQ needs both a question and an answer.', 422);
+        }
+        if (strlen($question) > 255) {
+            fail('FAQ questions must be 255 characters or less.', 422);
+        }
+        if (strlen($answer) > 2000) {
+            fail('FAQ answers must be 2000 characters or less.', 422);
+        }
+
+        $faqs[] = [
+            'question' => $question,
+            'answer' => $answer,
+        ];
+    }
+
+    $db = pdo();
+    $db->beginTransaction();
+    try {
+        $delete = $db->prepare('DELETE FROM category_faqs WHERE category = ?');
+        $delete->execute([$category]);
+
+        $insert = $db->prepare(
+            'INSERT INTO category_faqs (category, question, answer, sort_order, active)
+             VALUES (?, ?, ?, ?, 1)'
+        );
+        foreach ($faqs as $index => $faq) {
+            $insert->execute([$category, $faq['question'], $faq['answer'], $index + 1]);
+        }
+
+        $db->commit();
+    } catch (Throwable $exception) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        fail($exception->getMessage(), 500);
+    }
+
+    respond([
+        'message' => 'Category FAQs saved.',
+        'category' => $category,
+        'faqs' => category_faqs($category),
+    ]);
 }
 
 validate_required($_POST, ['name', 'category']);

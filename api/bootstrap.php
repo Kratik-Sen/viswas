@@ -508,6 +508,79 @@ function ensure_product_banner_columns(): void
     $ready = true;
 }
 
+function ensure_category_faq_table(): void
+{
+    static $ready = false;
+    if ($ready) {
+        return;
+    }
+
+    pdo()->exec(
+        'CREATE TABLE IF NOT EXISTS category_faqs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            category VARCHAR(80) NOT NULL,
+            question VARCHAR(255) NOT NULL,
+            answer TEXT NOT NULL,
+            sort_order INT NOT NULL DEFAULT 0,
+            active TINYINT(1) NOT NULL DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_category_faqs_category (category, active, sort_order)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+    );
+
+    $ready = true;
+}
+
+function category_faqs(?string $category = null): array
+{
+    ensure_category_faq_table();
+
+    if ($category !== null && $category !== '') {
+        $stmt = pdo()->prepare(
+            'SELECT id, category, question, answer, sort_order
+             FROM category_faqs
+             WHERE category = ? AND active = 1
+             ORDER BY sort_order ASC, id ASC'
+        );
+        $stmt->execute([$category]);
+
+        return array_map('normalize_category_faq', $stmt->fetchAll());
+    }
+
+    $stmt = pdo()->query(
+        'SELECT id, category, question, answer, sort_order
+         FROM category_faqs
+         WHERE active = 1
+         ORDER BY category ASC, sort_order ASC, id ASC'
+    );
+
+    $grouped = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $faq = normalize_category_faq($row);
+        $grouped[$faq['category']][] = $faq;
+    }
+
+    foreach (PRODUCT_CATEGORIES as $orderedCategory) {
+        if (!isset($grouped[$orderedCategory])) {
+            $grouped[$orderedCategory] = [];
+        }
+    }
+
+    return $grouped;
+}
+
+function normalize_category_faq(array $row): array
+{
+    return [
+        'id' => (int) $row['id'],
+        'category' => (string) $row['category'],
+        'question' => (string) $row['question'],
+        'answer' => (string) $row['answer'],
+        'sort_order' => (int) $row['sort_order'],
+    ];
+}
+
 function product_variants(int $productId): array
 {
     ensure_variant_image_columns();
@@ -551,6 +624,7 @@ function normalize_product(array $row): array
     $row['banner_image_public_id'] = $row['banner_image_public_id'] ?? null;
     $row['images'] = product_images((int) $row['id']);
     $row['variants'] = product_variants((int) $row['id']);
+    $row['category_faqs'] = category_faqs((string) $row['category']);
 
     if ($row['variants'] !== []) {
         $row['price'] = (float) $row['variants'][0]['price'];
