@@ -1349,6 +1349,8 @@ h1, h2, h3, h4 {
   color: var(--muted);
   font-size: 0.86rem;
   line-height: 1.7;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .product-review-line {
@@ -1660,6 +1662,22 @@ h1, h2, h3, h4 {
 }
 
 .product-description ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.product-faq-answer-list {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.product-faq-answer-list ul {
+  display: grid;
+  gap: 6px;
   margin: 0;
   padding-left: 18px;
 }

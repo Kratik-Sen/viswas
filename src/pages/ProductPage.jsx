@@ -42,8 +42,8 @@ function productBenefitsText(product) {
   ].join("\n");
 }
 
-function productBenefitPoints(product) {
-  return productBenefitsText(product)
+function textPoints(text) {
+  return String(text || "")
     .split(/\r?\n/)
     .flatMap((line) => {
       const trimmed = line.trim();
@@ -52,6 +52,10 @@ function productBenefitPoints(product) {
     })
     .map((line) => line.replace(/^[\u2022*-]\s*/, "").trim())
     .filter(Boolean);
+}
+
+function productBenefitPoints(product) {
+  return textPoints(productBenefitsText(product));
 }
 
 function productFaqs(product, categoryFaqs) {
@@ -281,14 +285,14 @@ export default function ProductPage({ route, products, categoryFaqs, addToCart, 
             </button>
           </div>
 
-          <section className="detail-section product-description">
+          {/* <section className="detail-section product-description">
             <h2>Product Benefits</h2>
             <ul>
               {benefitItems.map((item, index) => (
                 <li key={`${item}-${index}`}>{item}</li>
               ))}
             </ul>
-          </section>
+          </section> */}
 
           {faqs.length > 0 && (
             <section className="detail-section product-faq-section">
@@ -297,6 +301,7 @@ export default function ProductPage({ route, products, categoryFaqs, addToCart, 
                 {faqs.map((faq, index) => {
                   const faqId = faq.id ?? `${faq.question}-${index}`;
                   const isOpen = String(openFaqId) === String(faqId);
+                  const answerPoints = textPoints(faq.answer);
 
                   return (
                     <article className={isOpen ? "product-faq-item open" : "product-faq-item"} key={faqId}>
@@ -313,9 +318,20 @@ export default function ProductPage({ route, products, categoryFaqs, addToCart, 
                       </button>
                       {isOpen && (
                         <div className="product-faq-answer">
-                          <p>
-                            <strong>A.</strong> {faq.answer}
-                          </p>
+                          {answerPoints.length > 1 ? (
+                            <div className="product-faq-answer-list">
+                              <strong>A.</strong>
+                              <ul>
+                                {answerPoints.map((answerPoint, answerIndex) => (
+                                  <li key={`${answerPoint}-${answerIndex}`}>{answerPoint}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : (
+                            <p>
+                              <strong>A.</strong> {answerPoints[0] || faq.answer}
+                            </p>
+                          )}
                         </div>
                       )}
                     </article>
